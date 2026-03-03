@@ -204,8 +204,8 @@ ClinicalTrialEngine/
 │   │   ├── daily_agent.py               Phase 2: DailySimulator (3000+ lines)
 │   │   └── care_agent.py                Care AI 4-Turn 영상통화 에이전트
 │   │
-│   ├── orchestrator_v2.py               시뮬레이션 루프 (Natural/Care AI/Both)
-│   ├── run_simulation_v2.py             CLI 실행 + 로깅
+│   ├── orchestrator.py               시뮬레이션 루프 (Natural/Care AI/Both)
+│   ├── run_simulation.py             CLI 실행 + 로깅
 │   ├── game_session.py                  인터랙티브 게임 모드 세션 관리
 │   ├── crf_mapper.py                    CDASH CRF 포맷 매핑
 │   ├── context_manager.py               컨텍스트 압축

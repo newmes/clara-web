@@ -10,7 +10,7 @@
 
 `src/doc_agent/` has been integrated into the ClinicalTrialEngine system. The original functionality (MedWatch 3500A PDF + E2B(R3) XML generation from CRF data) is fully preserved. Changes were made only to adapt the package to work within our project structure.
 
-**Our code (`src/crf_mapper.py`, `src/orchestrator_v2.py`, etc.) was NOT modified.** All changes are in `src/doc_agent/` files and new integration files.
+**Our code (`src/crf_mapper.py`, `src/orchestrator.py`, etc.) was NOT modified.** All changes are in `src/doc_agent/` files and new integration files.
 
 ---
 

@@ -1,4 +1,4 @@
-"""메인 실행 스크립트 v2 — Fate table 없는 확률적 시뮬레이션 엔진
+"""메인 실행 스크립트 — Fate table 없는 확률적 시뮬레이션 엔진
 
 3-Phase 아키텍처:
   Phase 0: Rule Agent → rule_set (약물당 1회)
@@ -7,19 +7,19 @@
 
 Usage:
     # 환자 1명 × 21일 quick test
-    python src/run_simulation_v2.py --patients 1 --days 21
+    python src/run_simulation.py --patients 1 --days 21
 
     # 환자 10명 × Phase 1만 (환자 생성까지만)
-    python src/run_simulation_v2.py --patients 10 --patients-only
+    python src/run_simulation.py --patients 10 --patients-only
 
     # 기존 규칙 재사용 + 환자 3명 × 142일
-    python src/run_simulation_v2.py --patients 3 --days 142 --skip-rules
+    python src/run_simulation.py --patients 3 --days 142 --skip-rules
 
     # 다른 약물로 확장
-    python src/run_simulation_v2.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5 --days 90
+    python src/run_simulation.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5 --days 90
 
     # 시드 고정 (재현 가능)
-    python src/run_simulation_v2.py --patients 10 --days 42 --seed 42
+    python src/run_simulation.py --patients 10 --days 42 --seed 42
 """
 
 import argparse
@@ -45,7 +45,7 @@ if not os.environ.get("GOOGLE_API_KEY"):
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.orchestrator_v2 import SimulationRunnerV2
+from src.orchestrator import SimulationRunner
 from src.logger import log_summary, get_log_file_path
 
 
@@ -119,7 +119,7 @@ def main():
     sys.stdout = _TeeWriter(original_stdout, log_file)
 
     try:
-        runner = SimulationRunnerV2(
+        runner = SimulationRunner(
             drug_name=args.drug,
             indication=args.indication,
             model=args.model,

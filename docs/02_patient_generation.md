@@ -343,7 +343,7 @@ sampler = Sampler(seed=patient_seed)
 
 ### 병렬 실행
 
-`orchestrator_v2.py`의 `create_patients_parallel(n, max_workers=10)`:
+`orchestrator.py`의 `create_patients_parallel(n, max_workers=10)`:
 - `ThreadPoolExecutor`로 환자를 병렬 생성
 - 각 스레드에서 독립 `Sampler(seed=base+i)` 생성
 - 결과는 `patients[idx]`에 인덱스 기반 배치 → 순서 보장

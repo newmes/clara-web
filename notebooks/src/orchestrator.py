@@ -129,7 +129,7 @@ def _find_last_hospital_record(day_results: list[dict]) -> dict | None:
     return None
 
 
-class SimulationRunnerV2:
+class SimulationRunner:
     '''3-Phase 확률적 시뮬레이션 러너.
 
     Fate table 없이, hazard function으로 매일의 이벤트를 동적 결정.
@@ -549,6 +549,27 @@ class SimulationRunnerV2:
             if any(a.get("action") in _escalation_actions for a in care_result.get("actions", [])):
                 force_hospital_tomorrow = True
 
+            # Care AI 즉시 개입: G2+ AE 감지 시 병원 방문 없이도 dose hold + SC
+            detected_issues = care_result.get("nurse_assessment", {}).get("detected_issues", [])
+            care_severe = [
+                issue for issue in detected_issues
+                if isinstance(issue, dict) and (issue.get("estimated_grade") or 0) >= 2
+            ]
+            if care_severe and not is_hospital:
+                care_ae_list = [
+                    {"ae": issue.get("suspected_ae") or issue.get("issue", "unknown"),
+                     "grade": issue.get("estimated_grade", 2)}
+                    for issue in care_severe
+                ]
+                simulator.apply_hospital_dose_modifications(care_ae_list, day, cycle, cycle_day)
+                simulator.prescribe_conmeds_for_aes(care_ae_list, day)
+                simulator.patch_day_treatment_status(day_result)
+                day_result["cm_records"] = simulator._get_active_cm_records(day)
+                day_result["objective"]["active_aes"] = simulator._get_active_aes_list(include_resolved_today=True)
+                _logger.info(
+                    f"  [CareAI Immediate] Day {day}: dose_hold + SC for {[a['ae'] for a in care_ae_list]}"
+                )
+
             # Observation model: GT → Hospital Record 변환
             is_visit, observed = observation_model.process_day(
                 day=day, day_result=day_result, is_hospital=is_hospital,
@@ -562,19 +583,13 @@ class SimulationRunnerV2:
                 dose_changes = simulator.apply_hospital_dose_modifications(
                     observed_aes, day, cycle, cycle_day,
                 )
-                # 투약 전 AE 평가 완료 → 이제 투약 시도 (held면 자동 skip)
                 simulator._process_drug_administration(day, cycle_day)
-                # EC 레코드 재생성 (dose modification 결과 반영)
                 simulator._enrich_ec_records(day_result, day, cycle_day, is_hospital)
-                # 치료 상태 업데이트
                 simulator.patch_day_treatment_status(day_result)
                 new_ts = day_result.get('objective', {}).get('treatment_status', 'active')
                 observation_model.update_treatment_status(new_ts)
-                # 관찰된 AE에 대해 보조약 처방
                 simulator.prescribe_conmeds_for_aes(observed_aes, day)
-                # cm_records 갱신
                 day_result["cm_records"] = simulator._get_active_cm_records(day)
-                # active_aes를 re-sync (AEACN 귀인 반영)
                 day_result["objective"]["active_aes"] = simulator._get_active_aes_list(include_resolved_today=True)
 
             # Observation model 결과를 day_result에 merge

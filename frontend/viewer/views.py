@@ -2335,10 +2335,10 @@ def api_sim_start(request):
                         key, val = line.split("=", 1)
                         os.environ.setdefault(key.strip(), val.strip())
 
-        from src.orchestrator_v2 import SimulationRunnerV2
+        from src.orchestrator import SimulationRunner
 
         try:
-            runner = SimulationRunnerV2(
+            runner = SimulationRunner(
                 drug_name=drug,
                 indication=indication,
                 data_dir=str(run_dir),

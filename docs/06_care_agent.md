@@ -339,7 +339,7 @@ Care AI의 action을 시뮬레이션 상태에 반영:
 ## 6. Orchestrator에서의 Care AI 통합
 
 ```python
-# orchestrator_v2.py의 run_care_ai() 내부:
+# orchestrator.py의 run_care_ai() 내부:
 
 # 1. 매일 영상통화
 care_result = care_agent.conduct_video_call(day, day_result, day_results, last_hospital_record)

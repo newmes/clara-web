@@ -356,13 +356,13 @@ jupyter lab notebooks/
 
 ```bash
 # Default: Padcev + Pembrolizumab, 1 patient, 21 days
-python src/run_simulation_v2.py
+python src/run_simulation.py
 
 # A/B comparison: 50 patients, 84 days (4 cycles)
-python src/run_simulation_v2.py --patients 50 --days 84 --seed 42 --mode both
+python src/run_simulation.py --patients 50 --days 84 --seed 42 --mode both
 
 # Drug-agnostic: any drug works
-python src/run_simulation_v2.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5
+python src/run_simulation.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5
 ```
 
 ---
@@ -471,8 +471,8 @@ CLARA/
 │   │
 │   ├── multimodal/                Multimodal AE detection pipeline
 │   ├── cough_detection/           HeAR-based cough classification
-│   ├── orchestrator_v2.py         3-Phase simulation orchestrator
-│   └── run_simulation_v2.py       CLI entry point
+│   ├── orchestrator.py         3-Phase simulation orchestrator
+│   └── run_simulation.py       CLI entry point
 │
 ├── dca_server/                       DCA Nurse API (FastAPI)
 │   ├── server.py                  Endpoints: classify, cough, transcribe, nurse
