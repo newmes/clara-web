@@ -113,15 +113,6 @@ Phase 2: 일별 시뮬레이션 (Day 1 ~ N)
 | `agents/care_agent.py` | ★ **Care AI 간호사** (4-turn 영상통화, 감지+보고만) | 매일 2-4회 |
 | `agents/llm_client.py` | Google Gemini API 공통 호출 | — |
 
-### 레거시 (사용하지 않음)
-| 파일 | 설명 |
-|------|------|
-| `agents/fate_agent_v2.py` | 이전 운명표 생성 (제거됨) |
-| `agents/progression_agent_v2.py` | 이전 일별 시뮬레이션 (daily_agent로 대체) |
-| `agents/god_agent.py` | 이전 환자 생성 (patient_agent로 대체) |
-| `agents/fate_agent.py` | 이전 운명표 (레거시) |
-| `agents/drug_agent.py` | 이전 약물 프로파일 (rule_agent로 대체) |
-
 ---
 
 ## Observation Model (★ v2.3 핵심)
@@ -311,8 +302,9 @@ ClinicalTrialEngine/
 │   │   ├── daily_agent.py      ← Phase 2: GT 생성 + HR 기반 dose mod
 │   │   └── care_agent.py       ← Care AI: 4-turn 영상통화
 │   │
-│   ├── orchestrator_v2.py      ← 3-Phase 시뮬레이션 루프
-│   ├── run_simulation_v2.py    ← CLI 실행
+│   ├── multimodal/             ← Multimodal AE 감지 (SigLIP + HeAR)
+│   ├── orchestrator.py         ← 3-Phase 시뮬레이션 루프
+│   ├── run_simulation.py       ← CLI 실행
 │   ├── logger.py               ← 로깅 (logs/ 디렉토리)
 │   ├── context_manager.py      ← 컨텍스트 압축
 │   └── validator.py            ← 스키마 검증
@@ -330,6 +322,21 @@ ClinicalTrialEngine/
 │   └── sim_{ts}.stats.json     ← LLM 호출 통계
 │
 ├── frontend/                   ← Django 웹 뷰어
+│   └── viewer/views/           ← views 패키지 (기능별 분리)
+│       ├── __init__.py         ← 전체 view re-export
+│       ├── _helpers.py         ← 공통 데이터 유틸리티
+│       ├── core.py             ← landing, simulation_list
+│       ├── trial.py            ← trial viewer, patient state
+│       ├── demo.py             ← 데모 페이지, antihallu API
+│       ├── compare.py          ← A/B 비교 대시보드
+│       ├── sim_api.py          ← 시뮬레이션 시작/중지/상태
+│       ├── doc.py              ← doc agent, SAE, CRF, 통계
+│       ├── care_api.py         ← care agent 데모 API
+│       ├── medgemma.py         ← MedGemma API
+│       ├── stats.py            ← 통계 분석 + 챗봇
+│       ├── ruleset.py          ← ruleset 생성/비교 API
+│       └── map.py              ← 맵 생성 API
+│
 ├── schemas/                    ← JSON 스키마
 └── prompts/                    ← 시스템 프롬프트
 ```
@@ -340,19 +347,19 @@ ClinicalTrialEngine/
 
 ```bash
 # 기본: Padcev+Pembro, 환자 1명, 21일
-python src/run_simulation_v2.py
+python src/run_simulation.py
 
 # A/B 비교 (Natural + Care AI 동시 실행, 같은 환자)
-python src/run_simulation_v2.py --patients 10 --days 84 --seed 42 --mode both --skip-rules
+python src/run_simulation.py --patients 10 --days 84 --seed 42 --mode both --skip-rules
 
 # Natural만
-python src/run_simulation_v2.py --patients 10 --days 84 --seed 42 --mode natural --skip-rules
+python src/run_simulation.py --patients 10 --days 84 --seed 42 --mode natural --skip-rules
 
 # Care AI만
-python src/run_simulation_v2.py --patients 10 --days 84 --seed 42 --mode care_ai --skip-rules
+python src/run_simulation.py --patients 10 --days 84 --seed 42 --mode care_ai --skip-rules
 
 # 다른 약물 (drug-agnostic)
-python src/run_simulation_v2.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5
+python src/run_simulation.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5
 ```
 
 ---
