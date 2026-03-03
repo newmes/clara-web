@@ -37,7 +37,6 @@ Thumbs.db
 
 # Simulation data & logs (large, regenerable)
 data/*
-!data/schema/
 !data/rule_set.json
 !data/rule_sets/
 logs/
@@ -56,3 +55,8 @@ models/
 reference/
 cdisc/
 nohup.out
+
+# Binary audio assets (large)
+**/cough_clips/
+*.wav
+*.mp3

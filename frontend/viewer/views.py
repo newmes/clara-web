@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import time
+from functools import lru_cache
 from pathlib import Path
 from urllib.error import URLError
 from urllib.request import Request, urlopen
@@ -18,6 +19,10 @@ from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
+
+from .crf_aggregator import _read_jsonl_cached, _load_patient_json
+
+logger = logging.getLogger(__name__)
 
 # ─── Data helpers ─────────────────────────────────────────────
 
@@ -100,34 +105,80 @@ def _get_run_path(run_id: str) -> Path:
     return DATA_DIR / "runs" / run_id
 
 
+_warmed_keys: set[tuple] = set()
+
+
+def _warm_cache(run_path: Path, patient_ids: list[str], mode: str):
+    """Pre-load JSONL + patient JSON into LRU cache.
+
+    First call for a (run, mode) pair reads all files (~2-3s for 100 patients).
+    Subsequent calls are instant (set check → skip).
+    This shifts the file I/O cost from being spread across many API calls
+    to a single upfront cost on first page load.
+    """
+    key = (str(run_path), mode)
+    if key in _warmed_keys:
+        return
+    _warmed_keys.add(key)
+
+    sim_dir = run_path / "simulations"
+    if not sim_dir.exists():
+        return
+
+    for pid in patient_ids:
+        fpath = sim_dir / f"{pid}_{mode}.jsonl"
+        if fpath.exists():
+            _read_jsonl_cached(fpath)
+        _load_patient_json(run_path, pid)
+
+
+def _get_day_index(run_path: Path, patient_id: str, mode: str) -> dict[int, dict]:
+    """Build {day: record} index from cached JSONL. O(1) day lookup."""
+    fpath = run_path / "simulations" / f"{patient_id}_{mode}.jsonl"
+    if not fpath.exists():
+        return {}
+    records = _read_jsonl_cached(fpath)
+    return {r.get("day"): r for r in records}
+
+
 def _load_patient_profile(run_path: Path, patient_id: str) -> dict:
     """Load patient JSON profile (demographics, persona, etc.)."""
-    f = run_path / "patients" / f"{patient_id}.json"
-    if f.exists():
-        with open(f) as fh:
-            return json.load(fh)
-    return {}
+    result = _load_patient_json(run_path, patient_id)
+    return result if result is not None else {}
+
+
+@lru_cache(maxsize=64)
+def _load_run_meta_cached(fpath_str: str, _mtime: float) -> dict:
+    with open(fpath_str, encoding="utf-8") as fh:
+        return json.load(fh)
 
 
 def _load_run_meta(run_path: Path) -> dict:
-    """Load run_meta.json for this run."""
+    """Load run_meta.json for this run (mtime-cached)."""
     f = run_path / "run_meta.json"
-    if f.exists():
-        try:
-            with open(f) as fh:
-                return json.load(fh)
-        except Exception:
-            pass
-    return {}
+    if not f.exists():
+        return {}
+    try:
+        return _load_run_meta_cached(str(f), f.stat().st_mtime)
+    except Exception:
+        return {}
+
+
+@lru_cache(maxsize=32)
+def _load_rule_set_cached(fpath_str: str, _mtime: float) -> dict:
+    with open(fpath_str, encoding="utf-8") as fh:
+        return json.load(fh)
 
 
 def _load_rule_set(run_path: Path) -> dict:
-    """Load rule_set.json for this run."""
+    """Load rule_set.json for this run (mtime-cached)."""
     f = run_path / "rule_set.json"
-    if f.exists():
-        with open(f) as fh:
-            return json.load(fh)
-    return {}
+    if not f.exists():
+        return {}
+    try:
+        return _load_rule_set_cached(str(f), f.stat().st_mtime)
+    except Exception:
+        return {}
 
 
 def _extract_lab_ranges(run_path: Path, mode: str = "natural") -> dict:
@@ -144,36 +195,32 @@ def _extract_lab_ranges(run_path: Path, mode: str = "natural") -> dict:
     for fpath in sorted(sim_dir.glob(f"*_{mode}.jsonl")):
         if "_hospital" in fpath.stem:
             continue
-        with open(fpath, encoding="utf-8") as fh:
-            for line in fh:
-                line = line.strip()
-                if not line:
-                    continue
-                record = json.loads(line)
-                lb = record.get("LB")
-                if not lb or not lb.get("LBPERF"):
-                    continue
-                results = lb.get("results", {})
-                ranges = {}
-                for test_name, vals in results.items():
-                    lo = vals.get("LBORNRLO")
-                    hi = vals.get("LBORNRHI")
-                    if lo is not None or hi is not None:
-                        display = _lab_display_name(test_name)
-                        ranges[display] = {
-                            "unit": vals.get("LBORRESU", ""),
-                            "normal_range": {"min": lo, "max": hi},
-                            "LLN": lo,
-                            "ULN": hi,
-                        }
-                if ranges:
-                    return ranges
+        records = _read_jsonl_cached(fpath)
+        for record in records:
+            lb = record.get("LB")
+            if not lb or not lb.get("LBPERF"):
+                continue
+            results = lb.get("results", {})
+            ranges = {}
+            for test_name, vals in results.items():
+                lo = vals.get("LBORNRLO")
+                hi = vals.get("LBORNRHI")
+                if lo is not None or hi is not None:
+                    display = _lab_display_name(test_name)
+                    ranges[display] = {
+                        "unit": vals.get("LBORRESU", ""),
+                        "normal_range": {"min": lo, "max": hi},
+                        "LLN": lo,
+                        "ULN": hi,
+                    }
+            if ranges:
+                return ranges
     return {}
 
 
-def _list_patients(run_path: Path) -> list[str]:
-    """List patient IDs from simulation files (exclude _hospital variants).
-    Falls back to patients/ directory if no simulation files exist yet."""
+@lru_cache(maxsize=32)
+def _list_patients_cached(run_path_str: str, _sim_mtime: float, _pat_mtime: float) -> list[str]:
+    run_path = Path(run_path_str)
     ids = set()
     sim_dir = run_path / "simulations"
     if sim_dir.exists():
@@ -196,43 +243,48 @@ def _list_patients(run_path: Path) -> list[str]:
     return sorted(ids)
 
 
+def _list_patients(run_path: Path) -> list[str]:
+    """List patient IDs from simulation files (exclude _hospital variants).
+    Falls back to patients/ directory if no simulation files exist yet.
+    Directory-mtime cached."""
+    sim_dir = run_path / "simulations"
+    patients_dir = run_path / "patients"
+    sim_mtime = sim_dir.stat().st_mtime if sim_dir.exists() else 0
+    pat_mtime = patients_dir.stat().st_mtime if patients_dir.exists() else 0
+    return _list_patients_cached(str(run_path), sim_mtime, pat_mtime)
+
+
 def _load_day_for_patient(run_path: Path, patient_id: str, day: int,
                           mode: str = "natural") -> dict | None:
-    """Load a single day's data for a patient from JSONL.
+    """Load a single day's data for a patient from cached JSONL.
 
+    Uses _get_day_index() for O(1) dict lookup instead of linear file scan.
     If the requested day is beyond the last entry AND the patient is
     deceased on the last day, return the death-day record so that
     downstream code still sees location='DECEASED'.
     """
-    f = run_path / "simulations" / f"{patient_id}_{mode}.jsonl"
-    if not f.exists():
+    day_index = _get_day_index(run_path, patient_id, mode)
+    if not day_index:
         return None
-    last_record = None
-    with open(f) as fh:
-        for line in fh:
-            record = json.loads(line)
-            if record.get("day") == day:
-                return record
-            last_record = record
+    record = day_index.get(day)
+    if record is not None:
+        return record
     # Day not found — check if patient died before this day
-    if last_record and last_record.get("day", 0) < day:
-        loc = (last_record.get("objective") or {}).get("location", "")
-        if loc == "DECEASED":
-            return last_record
+    max_day = max(day_index.keys())
+    if max_day < day:
+        last = day_index[max_day]
+        if (last.get("objective") or {}).get("location", "") == "DECEASED":
+            return last
     return None
 
 
 def _load_all_days_for_patient(run_path: Path, patient_id: str,
                                mode: str = "natural") -> list[dict]:
-    """Load all days for a patient."""
-    f = run_path / "simulations" / f"{patient_id}_{mode}.jsonl"
-    if not f.exists():
+    """Load all days for a patient (cached via _read_jsonl_cached)."""
+    fpath = run_path / "simulations" / f"{patient_id}_{mode}.jsonl"
+    if not fpath.exists():
         return []
-    days = []
-    with open(f) as fh:
-        for line in fh:
-            days.append(json.loads(line))
-    return days
+    return list(_read_jsonl_cached(fpath))
 
 
 def _find_last_hr_observation(run_path: Path, patient_id: str, day: int,
@@ -240,48 +292,41 @@ def _find_last_hr_observation(run_path: Path, patient_id: str, day: int,
     """Find the last day with non-empty hospital_record labs/vitals.
 
     Returns (hr_objective, stale_days). If none found, returns ({}, 0).
-    Reads the JSONL backwards from the target day.
+    Uses cached data with reverse search — no file I/O.
     """
-    f = run_path / "simulations" / f"{patient_id}_{mode}.jsonl"
-    if not f.exists():
+    day_index = _get_day_index(run_path, patient_id, mode)
+    if not day_index:
         return {}, 0
-    candidates = []
-    with open(f) as fh:
-        for line in fh:
-            record = json.loads(line)
-            d_num = record.get("day", 0)
-            if d_num >= day:
-                break
-            hr = record.get("hospital_record", {})
-            hr_obj = hr.get("objective", {})
-            if hr_obj.get("labs") or hr_obj.get("vitals"):
-                candidates.append((d_num, hr_obj))
-    if candidates:
-        last_day_num, last_hr_obj = candidates[-1]
-        return last_hr_obj, day - last_day_num
+    for d_num in sorted((d for d in day_index if d < day), reverse=True):
+        record = day_index[d_num]
+        hr = record.get("hospital_record", {})
+        hr_obj = hr.get("objective", {})
+        if hr_obj.get("labs") or hr_obj.get("vitals"):
+            return hr_obj, day - d_num
     return {}, 0
 
 
 def _count_days(run_path: Path, mode: str | None = None) -> int:
     """Find max day across all patients.
-    
+
+    Uses cached JSONL data — checks only last record per file.
     If mode is specified, only count that mode's files.
     Otherwise, count across all modes.
     """
     sim_dir = run_path / "simulations"
+    if not sim_dir.exists():
+        return 0
     max_day = 0
-    patterns = []
-    if mode:
-        patterns.append(f"*_{mode}.jsonl")
-    else:
-        patterns.extend(["*_natural.jsonl", "*_care_ai.jsonl"])
+    patterns = [f"*_{mode}.jsonl"] if mode else ["*_natural.jsonl", "*_care_ai.jsonl"]
     for pattern in patterns:
-        for f in sim_dir.glob(pattern):
-            with open(f) as fh:
-                for line in fh:
-                    d = json.loads(line).get("day", 0)
-                    if d > max_day:
-                        max_day = d
+        for fpath in sim_dir.glob(pattern):
+            if "_hospital" in fpath.stem:
+                continue
+            records = _read_jsonl_cached(fpath)
+            if records:
+                last_day = records[-1].get("day", 0)
+                if last_day > max_day:
+                    max_day = last_day
     return max_day
 
 
@@ -684,10 +729,6 @@ def demo_anti_hallucination(request):
     return render(request, "demo/data_analysis_agent.html")
 
 
-def demo_medgemma(request):
-    """MedGemma Vision technology demo page."""
-    return render(request, "demo/medgemma.html")
-
 
 _MEDGEMMA_PROMPT = (
     "You are a clinical dermatology expert. You are given two images of the same patient:\n"
@@ -850,10 +891,6 @@ def api_medgemma_analyze_base(request):
     return JsonResponse(result)
 
 
-def demo_hazard(request):
-    """Hazard Engine technology demo page."""
-    return render(request, "demo/hazard.html")
-
 
 def demo_patient_init(request):
     """Patient Initialization demo — single patient generation with avatar."""
@@ -996,6 +1033,7 @@ def trial_viewer(request, run_id: str, day: int = 1):
     view_mode = request.GET.get("view", "hr")  # default Hospital Record
 
     patient_ids = _list_patients(run_path)
+    _warm_cache(run_path, patient_ids, mode)
     total_days = _count_days(run_path, mode)
     rule_set = _load_rule_set(run_path)
 
@@ -1005,18 +1043,14 @@ def trial_viewer(request, run_id: str, day: int = 1):
     except Exception:
         pass  # non-critical; map will fall back to default
 
-    # Load profiles for patient cards
+    # Load profiles + collect events in single loop
     patients = []
+    all_events = []
     for pid in patient_ids:
         profile = _load_patient_profile(run_path, pid)
         day_data = _load_day_for_patient(run_path, pid, day, mode)
         patients.append(_patient_summary(
             profile, day_data, view_mode, run_path=run_path, mode=mode))
-
-    # Collect day events across all patients
-    all_events = []
-    for pid in patient_ids:
-        day_data = _load_day_for_patient(run_path, pid, day, mode)
         if day_data:
             all_events.extend(_extract_day_events(day_data))
 
@@ -1468,6 +1502,7 @@ def api_day_data(request, run_id: str, day: int):
     mode = request.GET.get("mode", "natural")
     view_mode = request.GET.get("view", "hr")
     patient_ids = _list_patients(run_path)
+    _warm_cache(run_path, patient_ids, mode)
     patients = []
     all_events = []
 
@@ -1524,6 +1559,7 @@ def sse_stream(request, run_id: str):
     view_mode = request.GET.get("view", "hr")
     total_days = _count_days(run_path, mode)
     patient_ids = _list_patients(run_path)
+    _warm_cache(run_path, patient_ids, mode)
 
     def event_stream():
         for day in range(start_day, total_days + 1):
@@ -2918,8 +2954,6 @@ def _load_patient_data(run_path, patient_id, mode="natural"):
     Falls back to GT for older runs that lack *_hospital.jsonl.
     Uses crf_aggregator's file cache for fast repeated access.
     """
-    from viewer.crf_aggregator import _read_jsonl_cached, _load_patient_json
-
     profile_path = run_path / "patients" / f"{patient_id}.json"
     hr_path = run_path / "simulations" / f"{patient_id}_{mode}_hospital.jsonl"
     gt_path = run_path / "simulations" / f"{patient_id}_{mode}.jsonl"
@@ -3443,6 +3477,9 @@ def sae_report_editor(request, run_id: str, patient_id: str, ae_slug: str):
     pdf_url = f"/api/doc/download/{run_id}/{patient_id}/medwatch_3500a_{ae_slug}.pdf"
     xml_url = f"/api/doc/download/{run_id}/{patient_id}/e2b_r3_{ae_slug}.xml"
 
+    mode = request.GET.get("mode", "care_ai")
+    ae_day_str = request.GET.get("ae_day", "").strip()
+
     context = {
         "run_id": run_id,
         "patient_id": patient_id,
@@ -3458,6 +3495,8 @@ def sae_report_editor(request, run_id: str, patient_id: str, ae_slug: str):
         "patient_age": demo.get("age", "?"),
         "patient_sex": demo.get("sex", "?"),
         "model_name": _load_run_meta(run_path).get("model", ""),
+        "mode": mode,
+        "ae_day": ae_day_str,
     }
     return render(request, "doc/sae_report.html", context)
 
@@ -4337,7 +4376,14 @@ def api_stats_chat(request, run_id: str):
 
     cache_path = run_path / "validation" / f"csr_stats_{mode}.json"
     if not cache_path.exists():
-        return JsonResponse({"error": "Stats not computed yet. Load the stats page first."}, status=400)
+        # Fallback: try the other mode
+        alt_mode = "care_ai" if mode == "natural" else "natural"
+        alt_path = run_path / "validation" / f"csr_stats_{alt_mode}.json"
+        if alt_path.exists():
+            cache_path = alt_path
+            mode = alt_mode
+        else:
+            return JsonResponse({"error": "Stats not computed yet. Load the stats page first."}, status=400)
 
     with open(cache_path) as f:
         stats = json.load(f)
