@@ -546,6 +546,7 @@ def generate_patient_voice(
     )
 
     result_pcm = b""
+    cough_timestamps = []
     for i, sentence in enumerate(sentences):
         # Apply sick-speech transforms then generate TTS
         styled = _fragment_for_sick_speech(sentence, frequency_label)
@@ -561,6 +562,14 @@ def generate_patient_voice(
             silence = generate_silence(cfg.silence_padding_sec, cfg.sample_rate)
             # mix_audio로 볼륨 조절하여 삽입
             cough_offset = len(result_pcm) // 2 + int(cfg.silence_padding_sec * cfg.sample_rate)
+            cough_dur_sec = len(cough_pcm) / 2 / cfg.sample_rate
+            cough_start_sec = cough_offset / cfg.sample_rate
+            cough_timestamps.append({
+                "start_sec": round(cough_start_sec, 3),
+                "end_sec": round(cough_start_sec + cough_dur_sec, 3),
+                "duration_sec": round(cough_dur_sec, 3),
+                "cough_type": cough_type_label,
+            })
             padded_cough = concatenate_audio(silence, cough_pcm, silence)
             result_pcm = concatenate_audio(result_pcm, generate_silence(
                 cfg.silence_padding_sec + len(cough_pcm) / 2 / cfg.sample_rate + cfg.silence_padding_sec,
@@ -581,6 +590,7 @@ def generate_patient_voice(
             "cough_type": cough_type_label,
             "cough_dir": cough_dir_name,
             "num_coughs_inserted": len(cough_positions),
+            "cough_timestamps": cough_timestamps,
             "frequency": frequency_label,
             "overlay_volume": overlay_volume,
             "max_cough_sec": max_cough_sec,

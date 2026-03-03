@@ -181,11 +181,14 @@ def _build_baseline_prompt(profile: dict[str, Any]) -> str:
         build_hint = "Thin build, lean face."
 
     lines = [
-        f"A photorealistic close-up webcam portrait of a {age}-year-old {race} {sex}",
-        "cancer patient in a home setting during a telemedicine video call.",
-        "Slightly fatigued but alert expression, consistent with someone undergoing chemotherapy.",
-        "Natural indoor lighting, slightly grainy webcam quality.",
-        "Head and shoulders framing, looking directly at the camera.",
+        f"A photorealistic close-up face photograph of a {age}-year-old {race} {sex}",
+        "cancer patient at home, taken from a webcam.",
+        "This is a BASELINE photograph taken BEFORE starting treatment.",
+        "The patient has normal full hair with no hair loss or thinning.",
+        "Neutral, calm expression. Skin appears normal and healthy.",
+        "Natural indoor lighting. Face fills most of the frame, looking directly at the camera.",
+        "No hats, no head coverings.",
+        "No screens, no monitors, no laptop frames, no UI elements, no text overlays.",
     ]
     if build_hint:
         lines.append(build_hint)
@@ -241,7 +244,7 @@ def _build_daily_state_prompt(day: int, mood_snapshot: dict[str, float] | None =
         lines.append("Tense facial muscles, furrowed brow.")
 
     lines.append(
-        "Maintain the patient's identity, age, ethnicity, and video-call setting. "
+        "Maintain the patient's identity, age, ethnicity, and home setting. "
         "Changes should be subtle and realistic."
     )
     return " ".join(lines)
@@ -286,7 +289,7 @@ def _build_ae_edit_prompt(
         f"do not over- or under-represent. "
         f"{fatigue_hint}"
         f"The patient is on day {day} of chemotherapy, so general fatigue and slight pallor are expected. "
-        f"Maintain the patient's identity, age, ethnicity, and video-call setting. "
+        f"Maintain the patient's identity, age, ethnicity, and home setting. "
         f"Only modify facial appearance to show the described clinical findings."
     )
 

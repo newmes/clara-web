@@ -450,7 +450,6 @@ CLARA/
 │       ├── engine/                Probability engine (hazard, observation, sampler, mood)
 │       ├── doc_agent/             SAE report generation (MedWatch, E2B XML, MedDRA)
 │       ├── multimodal/            Multimodal AE detection (SigLIP + HeAR)
-│       ├── multimodal_v2/         Multimodal AE detection v2
 │       ├── ruleset_generation/    Drug rule discovery from 10+ DBs
 │       │   └── ground_truth/      7 real clinical trial datasets for validation
 │       ├── cough_detection/       HeAR-based cough classification
@@ -470,7 +469,7 @@ CLARA/
 │   │   ├── daily_agent.py         Phase 2: daily simulation
 │   │   └── care_agent.py          CLARA Call: 4-turn video calls
 │   │
-│   ├── multimodal_v2/             Multimodal AE detection pipeline
+│   ├── multimodal/                Multimodal AE detection pipeline
 │   ├── cough_detection/           HeAR-based cough classification
 │   ├── orchestrator_v2.py         3-Phase simulation orchestrator
 │   └── run_simulation_v2.py       CLI entry point

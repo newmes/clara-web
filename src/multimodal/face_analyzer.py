@@ -160,7 +160,7 @@ def _parse_ae_json(raw: str) -> list[DetectedAE]:
                 DetectedAE(
                     ae_term=item["ae_term"],
                     grade=int(item["grade"]),
-                    confidence=float(item["confidence"]),
+                    confidence=float(item.get("confidence", 0.9)),
                     reasoning=item.get("reasoning", ""),
                     channel="face",
                 )

@@ -62,9 +62,9 @@ COUGH_TYPE_DIR: dict[str, str] = {
 
 COUGH_SEVERITY: dict[str, tuple[float, float]] = {
     "none":       (0.0, 0.0),
-    "occasional": (0.5, 1.5),   # 약한 기침, 짧은 클립
-    "frequent":   (0.8, 2.5),   # 보통 기침
-    "severe":     (1.0, 3.5),   # 격렬한 기침, 긴 클립
+    "occasional": (0.9, 1.5),   # 약한 기침, 짧은 클립
+    "frequent":   (1.0, 2.5),   # 보통 기침
+    "severe":     (1.2, 3.5),   # 격렬한 기침, 긴 클립
 }
 
 
@@ -249,7 +249,10 @@ class MultimodalConfig:
 
     # --- HuggingFace token (for gated models like MedGemma) ---
     hf_token: str = field(
-        default_factory=lambda: os.environ.get("HF_TOKEN", "")
+        default_factory=lambda: os.environ.get(
+            "HF_TOKEN",
+            "",
+        )
     )
 
     # --- MedGemma 27B (face analysis — local VLM) ---
@@ -276,7 +279,7 @@ class MultimodalConfig:
     # --- Cough ---
     cough_clips_dir: Path = field(
         default_factory=lambda: (
-            Path(__file__).resolve().parent.parent.parent / "data" / "cough_clips"
+            Path(__file__).resolve().parent.parent.parent / "data" / "cough_clips_clean"
         )
     )
     cough_frequency: dict[str, tuple[int, int]] = field(
