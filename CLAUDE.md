@@ -321,7 +321,7 @@ ClinicalTrialEngine/
 │   ├── sim_{ts}.log            ← 시뮬레이션 로그
 │   └── sim_{ts}.stats.json     ← LLM 호출 통계
 │
-├── frontend/                   ← Django 웹 뷰어
+├── web/                        ← Django 웹 뷰어
 │   └── viewer/views/           ← views 패키지 (기능별 분리)
 │       ├── __init__.py         ← 전체 view re-export
 │       ├── _helpers.py         ← 공통 데이터 유틸리티

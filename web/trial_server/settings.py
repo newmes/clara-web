@@ -8,7 +8,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# PROJECT_ROOT = ClinicalTrialEngine/ (one level above frontend/)
+# PROJECT_ROOT = ClinicalTrialEngine/ (one level above web/)
 PROJECT_ROOT = BASE_DIR.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -28,7 +28,7 @@ DATA_DIR = BASE_DIR.parent / 'data'
 SECRET_KEY = 'django-insecure-trial-viewer-dev-only'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app', 'https://*.ngrok.io']
+CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app', 'https://*.ngrok.io', 'https://*.trycloudflare.com', 'https://*.parrotvox.com']
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -39,10 +39,31 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'viewer.middleware.RequestTimingMiddleware',
     'viewer.middleware.BlockStalePollingMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'perf': {'format': '%(message)s'},
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'perf',
+        },
+    },
+    'loggers': {
+        'perf': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
 
 CORS_ALLOW_ALL_ORIGINS = True
 

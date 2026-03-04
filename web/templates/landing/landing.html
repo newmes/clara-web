@@ -99,51 +99,55 @@
     opacity: 0;
   }
 
-  /* Two-column grid: map (left) + cards (right) */
+  /* Stacked layout: map on top, cards below */
   .hero-content {
-    display: grid;
-    grid-template-columns: 55fr 45fr;
-    gap: 80px;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    align-items: stretch;
     position: relative;
     margin-top: 1.2em;
     flex: 1;
     min-height: 0;
   }
 
-  /* Hero LEFT column (map) — initially centered */
+  /* Hero TOP section (map) — initially faded */
   .hero-left {
     will-change: transform, opacity;
     opacity: 0;
-    transform: translateX(22.5%) scale(0.92);
+    transform: scale(0.96);
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 16px 0 64px;
   }
 
-  /* Hero RIGHT column — initially hidden off-screen */
+  /* Hero BOTTOM section (cards) — initially hidden */
   .hero-right {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(8px, 1.2vh, 16px);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
     will-change: transform, opacity;
     opacity: 0;
-    transform: translateX(80px);
+    transform: translateY(30px);
   }
 
   /* =================================================================
      HERO ANIMATION KEYFRAMES
      ================================================================= */
   @keyframes heroCenterIn {
-    0%   { opacity: 0; transform: translateX(22.5%) scale(0.92); }
-    100% { opacity: 1; transform: translateX(22.5%) scale(1); }
+    0%   { opacity: 0; transform: scale(0.96); }
+    100% { opacity: 1; transform: scale(1); }
   }
 
   @keyframes heroSettleLeft {
-    0%   { transform: translateX(22.5%) scale(1); }
-    100% { transform: translateX(0) scale(1); }
+    0%   { transform: scale(1); }
+    100% { transform: scale(1); }
   }
 
   @keyframes cardSlideIn {
-    0%   { opacity: 0; transform: translateX(60px) translateY(12px); }
-    100% { opacity: 1; transform: translateX(0) translateY(0); }
+    0%   { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes mapReveal {
@@ -172,21 +176,21 @@
     animation: fadeUpSoft 600ms cubic-bezier(0.16, 1, 0.3, 1) 750ms forwards;
   }
 
-  /* -- Stage 1: Map enters center -- */
+  /* -- Stage 1: Map fades in -- */
   .hero-left--entering {
     animation: heroCenterIn 800ms cubic-bezier(0.16, 1, 0.3, 1) 900ms forwards;
   }
 
-  /* -- Stage 2: Map settles left -- */
+  /* -- Stage 2: Map settled -- */
   .hero-left--settled {
     opacity: 1;
-    animation: heroSettleLeft 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    transform: scale(1);
   }
 
   /* Demo card entrance */
   .demo-card {
     opacity: 0;
-    transform: translateX(60px) translateY(12px);
+    transform: translateY(20px);
   }
   .demo-card--visible {
     animation: cardSlideIn 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -211,18 +215,7 @@
   .hero-stage--instant .demo-card {
     opacity: 1; transform: none; animation: none;
   }
-  .hero-stage--instant .flow-line-bg { opacity: 0.2; }
-  .hero-stage--instant .flow-line {
-    opacity: 0.8;
-    stroke-dasharray: 8 24;
-    animation: flowStream 2s linear infinite;
-  }
-  .hero-stage--instant .flow-line--2 { animation-delay: -0.6s; }
-  .hero-stage--instant .flow-line--3 { animation-delay: -1.2s; }
-  .hero-stage--instant .flow-dot {
-    opacity: 1;
-    animation: dotPulse 2s ease-in-out infinite;
-  }
+  /* Flow connector instant state — handled in connector-v section */
   .hero-stage--instant .sim-map-section {
     opacity: 1; transform: none; animation: none;
   }
@@ -482,86 +475,106 @@
   .tech-card:last-child { margin-bottom: 0; }
 
   /* =================================================================
-     FLOW CONNECTOR — animated lines from map to cards
+     FLOW CONNECTOR — vertical animated lines from map to cards
      ================================================================= */
-  .flow-connector {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+  .flow-connector-v {
+    position: relative;
+    width: 100%;
+    height: 60px;
     pointer-events: none;
+    margin-top: -80px;
+    margin-bottom: -20px;
     z-index: 2;
+  }
+  .flow-connector-v svg {
+    width: 100%;
+    height: 100%;
     overflow: visible;
   }
-  .flow-connector svg {
-    width: 100%; height: 100%;
-    overflow: visible;
-  }
+
   /* Base line (faint trail) */
-  .flow-line-bg {
+  .fv-line-bg {
     fill: none;
     stroke-width: 1;
     stroke-linecap: round;
     opacity: 0;
     transition: opacity 0.6s ease;
   }
-  .flow-line-bg--1 { stroke: url(#flowGrad1); }
-  .flow-line-bg--2 { stroke: url(#flowGrad2); }
-  .flow-line-bg--3 { stroke: url(#flowGrad3); }
-  .flow-connector--visible .flow-line-bg { opacity: 0.2; }
+  .fv-line-bg--1 { stroke: rgba(122,162,247,0.25); }
+  .fv-line-bg--2 { stroke: rgba(63,185,80,0.25); }
+  .fv-line-bg--3 { stroke: rgba(188,140,255,0.25); }
+  .flow-connector-v--visible .fv-line-bg { opacity: 1; }
 
-  /* Animated flowing dashes (card → map direction) */
-  .flow-line {
+  /* Animated flowing dashes */
+  .fv-line {
     fill: none;
     stroke-width: 1.5;
     stroke-linecap: round;
     opacity: 0;
     transition: opacity 0.6s ease;
   }
-  .flow-line--1 { stroke: url(#flowGrad1); }
-  .flow-line--2 { stroke: url(#flowGrad2); }
-  .flow-line--3 { stroke: url(#flowGrad3); }
+  .fv-line--1 { stroke: rgba(122,162,247,0.6); }
+  .fv-line--2 { stroke: rgba(63,185,80,0.6); }
+  .fv-line--3 { stroke: rgba(188,140,255,0.6); }
 
-  .flow-connector--visible .flow-line {
+  .flow-connector-v--visible .fv-line {
     opacity: 0.8;
-    stroke-dasharray: 8 24;
-    animation: flowStream 2s linear infinite;
+    stroke-dasharray: 6 18;
+    animation: flowUp 1.8s linear infinite;
   }
-  .flow-connector--visible .flow-line--2 { animation-delay: -0.6s; }
-  .flow-connector--visible .flow-line--3 { animation-delay: -1.2s; }
+  .flow-connector-v--visible .fv-line--2 { animation-delay: -0.5s; }
+  .flow-connector-v--visible .fv-line--3 { animation-delay: -1.0s; }
 
-  /* Negative offset = dashes move from right (card) to left (map) */
-  @keyframes flowStream {
+  @keyframes flowUp {
     from { stroke-dashoffset: 0; }
-    to   { stroke-dashoffset: 64; }
+    to   { stroke-dashoffset: 48; }
   }
 
-  /* Glow dots at endpoints */
-  .flow-dot {
+  /* Glow dots */
+  .fv-dot {
     r: 3;
     opacity: 0;
     transition: opacity 0.4s ease;
   }
-  .flow-dot--src { fill: var(--accent-cyan); filter: drop-shadow(0 0 6px rgba(57,210,192,0.6)); }
-  .flow-dot--1 { fill: #58a6ff; filter: drop-shadow(0 0 6px rgba(88,166,255,0.6)); }
-  .flow-dot--2 { fill: #3fb950; filter: drop-shadow(0 0 6px rgba(63,185,80,0.6)); }
-  .flow-dot--3 { fill: #bc8cff; filter: drop-shadow(0 0 6px rgba(188,140,255,0.6)); }
-  .flow-connector--visible .flow-dot { opacity: 1; }
-  .flow-connector--visible .flow-dot--1 { transition-delay: 0.3s; }
-  .flow-connector--visible .flow-dot--2 { transition-delay: 0.45s; }
-  .flow-connector--visible .flow-dot--3 { transition-delay: 0.6s; }
+  .fv-dot--src { fill: var(--accent-cyan); filter: drop-shadow(0 0 6px rgba(57,210,192,0.6)); }
+  .fv-dot--1 { fill: #7aa2f7; filter: drop-shadow(0 0 6px rgba(122,162,247,0.6)); }
+  .fv-dot--2 { fill: #3fb950; filter: drop-shadow(0 0 6px rgba(63,185,80,0.6)); }
+  .fv-dot--3 { fill: #bc8cff; filter: drop-shadow(0 0 6px rgba(188,140,255,0.6)); }
+  .flow-connector-v--visible .fv-dot { opacity: 1; }
+  .flow-connector-v--visible .fv-dot--1 { transition-delay: 0.3s; }
+  .flow-connector-v--visible .fv-dot--2 { transition-delay: 0.45s; }
+  .flow-connector-v--visible .fv-dot--3 { transition-delay: 0.6s; }
 
-  /* Pulse animation on endpoint dots */
-  .flow-connector--visible .flow-dot {
-    animation: dotPulse 2s ease-in-out infinite 1s;
+  .flow-connector-v--visible .fv-dot {
+    animation: dotPulseV 2s ease-in-out infinite 1s;
   }
-  @keyframes dotPulse {
+  @keyframes dotPulseV {
     0%, 100% { r: 3; opacity: 1; }
     50% { r: 5; opacity: 0.6; }
   }
 
-  /* Hide on mobile */
+  /* Instant (return visitor) */
+  .hero-stage--instant .fv-line-bg { opacity: 1; }
+  .hero-stage--instant .fv-line {
+    opacity: 0.8;
+    stroke-dasharray: 6 18;
+    animation: flowUp 1.8s linear infinite;
+  }
+  .hero-stage--instant .fv-line--2 { animation-delay: -0.5s; }
+  .hero-stage--instant .fv-line--3 { animation-delay: -1.0s; }
+  .hero-stage--instant .fv-dot {
+    opacity: 1;
+    animation: dotPulseV 2s ease-in-out infinite;
+  }
+
+  /* Hide on small screens */
   @media (max-width: 900px) {
-    .flow-connector { display: none; }
+    .flow-connector-v { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fv-line, .fv-dot { animation: none !important; }
+    .fv-line-bg, .fv-line, .fv-dot { opacity: 0.4 !important; }
   }
 
   /* When used inside hero-right as demo-card, reset some spacing */
@@ -569,7 +582,7 @@
     margin-bottom: 0;
     padding: 0;
     overflow: hidden;
-    height: clamp(140px, calc((100vh - 280px) / 3 - 16px), 200px);
+    height: auto;
   }
   .hero-right .tech-card .tc-compact {
     display: flex;
@@ -587,24 +600,44 @@
     margin-bottom: 16px;
   }
 
-  /* Demo card: text-left + image-right full height */
+  /* Demo card: image on top + text below (vertical layout) */
   .tc-image-card {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     height: 100%;
+  }
+  .tc-image-wrap {
+    width: 100%;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 0;
+    background: #0a0a0a;
+    border-bottom: 1px solid rgba(48,54,61,0.4);
+    padding: 12px 0;
+  }
+  .tc-image-wrap img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    object-position: center;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .tech-card:hover .tc-image-wrap img {
+    transform: scale(1.06);
   }
   .tc-image-left {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 14px 20px 14px;
+    padding: 16px 18px 16px;
     min-width: 0;
   }
   .tc-image-left .tc-header {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   .tc-image-desc {
-    font-size: 0.82em;
+    font-size: 0.78em;
     color: var(--text-muted);
     line-height: 1.6;
     margin-bottom: 12px;
@@ -612,42 +645,22 @@
   .tc-image-left .tc-btn {
     margin-top: auto;
   }
-  .tc-image-wrap {
-    width: 300px;
-    flex-shrink: 0;
-    align-self: center;
-    overflow: hidden;
-    border-radius: 10px;
-    margin: 10px 14px 10px 0;
-    background: rgba(13,17,23,0.6);
-    border: 1px solid rgba(48,54,61,0.4);
-  }
-  .tc-image-wrap img {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-    object-position: center;
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .tech-card:hover .tc-image-wrap img {
-    transform: scale(1.06);
-  }
 
   /* Placeholder for upcoming image */
   .tc-image-placeholder {
-    width: 300px;
+    width: 100%;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
+    border-radius: 0;
     background: rgba(13,17,23,0.4);
-    border: 1px solid rgba(48,54,61,0.4);
+    border-bottom: 1px solid rgba(48,54,61,0.4);
     color: var(--text-muted);
     font-size: 0.82em;
     font-style: italic;
     min-height: 80px;
+    aspect-ratio: 16 / 9;
   }
 
   /* Accent line colors */
@@ -985,7 +998,7 @@
     border: 1px solid rgba(57,210,192,0.12);
     box-shadow: 0 4px 32px rgba(0,0,0,0.3), 0 0 60px rgba(57,210,192,0.04);
     background: #63c74d;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 2.2 / 1;
     transition: border-color 0.35s ease, box-shadow 0.35s ease;
   }
   .sim-map-container:hover {
@@ -1009,7 +1022,7 @@
      FOOTER — inline at bottom of hero
      ================================================================= */
   .landing-footer {
-    padding: 2em 0 8em;
+    padding: 5em 0 8em;
     text-align: center;
     font-size: 0.78em;
     color: var(--text-muted);
@@ -1032,9 +1045,9 @@
     .landing-wrap { height: auto; overflow: auto; }
     .hero-stage { height: auto; min-height: 100vh; padding: 2em 0 1em; overflow: visible; }
     .hero-content {
-      grid-template-columns: 1fr;
       margin-top: 1.5em;
     }
+    .hero-left { max-width: 100%; }
     .hero-text { opacity: 1; animation: none; }
     .hero-text .hero-overline,
     .hero-text .hero-title,
@@ -1045,7 +1058,10 @@
       animation: fadeUpSoft 800ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .hero-left--settled { animation: none; opacity: 1; }
-    .hero-right { transform: translateY(30px); }
+    .hero-right {
+      grid-template-columns: 1fr;
+      transform: translateY(30px);
+    }
     .demo-card { transform: translateY(20px); }
     .demo-card--visible {
       animation: fadeUpSoft 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -1138,10 +1154,10 @@
       </p>
     </div>
 
-    <!-- MAP + CARDS — side by side grid -->
+    <!-- MAP + CARDS — stacked layout -->
     <div class="hero-content" id="heroContent">
 
-      <!-- LEFT: Map -->
+      <!-- TOP: Map -->
       <div class="hero-left" id="heroLeft">
         {% if demo_run_id %}
         <div class="sim-map-section" id="simMapSection">
@@ -1164,33 +1180,20 @@
         {% endif %}
       </div>
 
-      <!-- FLOW CONNECTOR SVG — animated lines from map to cards -->
-      <div class="flow-connector" id="flowConnector">
-        <svg id="flowSvg">
-          <defs>
-            <linearGradient id="flowGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="rgba(57,210,192,0.6)"/>
-              <stop offset="100%" stop-color="rgba(88,166,255,0.5)"/>
-            </linearGradient>
-            <linearGradient id="flowGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="rgba(57,210,192,0.6)"/>
-              <stop offset="100%" stop-color="rgba(63,185,80,0.5)"/>
-            </linearGradient>
-            <linearGradient id="flowGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="rgba(57,210,192,0.6)"/>
-              <stop offset="100%" stop-color="rgba(188,140,255,0.5)"/>
-            </linearGradient>
-          </defs>
-          <!-- Paths and dots computed by JS -->
-        </svg>
+      <!-- VERTICAL FLOW CONNECTOR — map to cards -->
+      <div class="flow-connector-v" id="flowConnectorV">
+        <svg id="flowSvgV"></svg>
       </div>
 
-      <!-- RIGHT: 3 Demo Cards -->
+      <!-- BOTTOM: 3 Demo Cards -->
       <div class="hero-right" id="heroRight">
 
       <!-- Card 1: Simulation Engine -->
       <div class="tech-card accent-blue demo-card">
         <div class="tc-image-card">
+          <div class="tc-image-wrap">
+            <img src="{% static 'assets/demos/simulation_engine.webp' %}" alt="Simulation Engine — 10-Step Pipeline Daily Loop" loading="eager">
+          </div>
           <div class="tc-image-left">
             <div class="tc-header">
               <div class="tc-icon icon-blue">
@@ -1208,9 +1211,6 @@
               <span class="btn-label">Try Demo</span><span class="btn-hover-label">Run It</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </a>
-          </div>
-          <div class="tc-image-wrap">
-            <img src="{% static 'assets/demos/simulation_engine.webp' %}" alt="Simulation Engine — 10-Step Pipeline Daily Loop" loading="eager">
           </div>
           <!-- Patient Init visual -->
           <div id="ctsPatientRight" style="display:none;">
@@ -1295,6 +1295,9 @@
       <!-- Card 2: Data Collection Agent -->
       <div class="tech-card accent-green demo-card">
         <div class="tc-image-card">
+          <div class="tc-image-wrap">
+            <img src="{% static 'assets/demos/data_collection_agent.webp' %}" alt="Data Collection Agent — Multi-model SAE Detection" loading="eager">
+          </div>
           <div class="tc-image-left">
             <div class="tc-header">
               <div class="tc-icon icon-green">
@@ -1311,15 +1314,15 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </a>
           </div>
-          <div class="tc-image-wrap">
-            <img src="{% static 'assets/demos/data_collection_agent.webp' %}" alt="Data Collection Agent — Multi-model SAE Detection" loading="eager">
-          </div>
         </div>
       </div>
 
       <!-- Card 3: Data Analysis Agent -->
       <div class="tech-card accent-purple demo-card">
         <div class="tc-image-card">
+          <div class="tc-image-wrap">
+            <img src="{% static 'assets/demos/data_analysis_agent.webp' %}" alt="Data Analysis Agent — Anti-hallucination MedGemma" loading="eager">
+          </div>
           <div class="tc-image-left">
             <div class="tc-header">
               <div class="tc-icon icon-purple">
@@ -1335,9 +1338,6 @@
               <span class="btn-label">Try Demo</span><span class="btn-hover-label">Test It</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </a>
-          </div>
-          <div class="tc-image-wrap">
-            <img src="{% static 'assets/demos/data_analysis_agent.webp' %}" alt="Data Analysis Agent — Anti-hallucination MedGemma" loading="eager">
           </div>
         </div>
       </div>
@@ -1359,7 +1359,7 @@
      ================================================================ -->
 {% if demo_run_id %}
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
-<script src="{% static 'js/trial_map.js' %}?v=5"></script>
+<script src="{% static 'js/trial_map.js' %}?v=8"></script>
 {% endif %}
 <script>
 (function() {
@@ -1400,7 +1400,7 @@
       heroLeft.classList.remove('hero-left--entering');
       heroLeft.classList.add('hero-left--settled');
 
-      /* Show right column */
+      /* Show cards section */
       if (heroRight) {
         heroRight.style.opacity = '1';
         heroRight.style.transform = 'none';
@@ -1413,8 +1413,8 @@
         }, i * 200);
       });
 
-      /* Draw flow connector after cards settle */
-      setTimeout(drawFlowConnector, 1100);
+      /* Draw vertical flow connector after cards settle */
+      setTimeout(drawFlowV, 1100);
 
       /* Mark animation done */
       setTimeout(function() {
@@ -1440,78 +1440,64 @@
     {% if demo_run_id %}
     initSimMap();
     {% endif %}
-    setTimeout(drawFlowConnector, 100);
+    setTimeout(drawFlowV, 100);
   }
 
-  /* ─── Flow Connector: draw SVG curves from map to each card ─── */
-  var _prevSrcY = null;
-  var _stableCount = 0;
-  var _flowPoll = null;
-
-  function drawFlowConnector() {
-    clearTimeout(_flowPoll);
-
-    var mapEl = document.getElementById('simMapContainer') || document.getElementById('simMapSection');
+  /* ─── Vertical Flow Connector: map → cards ─── */
+  function drawFlowV() {
+    var connector = document.getElementById('flowConnectorV');
+    var svg = document.getElementById('flowSvgV');
     var cards = document.querySelectorAll('.demo-card');
-    var connector = document.getElementById('flowConnector');
-    var svg = document.getElementById('flowSvg');
-    if (!mapEl || !cards.length || !connector || !svg) return;
+    if (!connector || !svg || cards.length < 3) return;
 
-    var ref = connector.getBoundingClientRect();
-    if (ref.width === 0 || ref.height === 0) {
-      _flowPoll = setTimeout(drawFlowConnector, 100);
-      return;
-    }
+    var cRect = connector.getBoundingClientRect();
+    if (cRect.width === 0) { setTimeout(drawFlowV, 150); return; }
 
-    var mapRect = mapEl.getBoundingClientRect();
-    var srcX = mapRect.right - ref.left;
-    var srcY = mapRect.top + mapRect.height * 0.5 - ref.top;
+    var w = cRect.width;
+    var h = cRect.height;
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
 
-    /* Wait until layout stabilises (srcY unchanged for 3 consecutive checks) */
-    if (_prevSrcY !== null && Math.abs(srcY - _prevSrcY) < 0.5) {
-      _stableCount++;
-    } else {
-      _stableCount = 0;
-    }
-    _prevSrcY = srcY;
+    /* Source: top center */
+    var srcX = w / 2;
+    var srcY = 0;
 
-    if (_stableCount < 3) {
-      _flowPoll = setTimeout(drawFlowConnector, 120);
-      return;
-    }
-
-    /* Layout stable — draw */
-    svg.setAttribute('viewBox', '0 0 ' + ref.width + ' ' + ref.height);
-
-    var html = svg.querySelector('defs').outerHTML;
-    html += '<circle class="flow-dot flow-dot--src" cx="' + srcX + '" cy="' + srcY + '" r="3"/>';
-
-    cards.forEach(function(card, i) {
+    /* Destinations: top-center of each card */
+    var html = '';
+    var dstPoints = [];
+    cards.forEach(function(card) {
       var cr = card.getBoundingClientRect();
-      var dstX = cr.left - ref.left;
-      var dstY = cr.top + cr.height * 0.5 - ref.top;
+      var dx = cr.left + cr.width / 2 - cRect.left;
+      dstPoints.push({ x: dx, y: h });
+    });
 
-      var cpOffset = 60;
+    /* Source dot */
+    html += '<circle class="fv-dot fv-dot--src" cx="' + srcX + '" cy="' + srcY + '" r="3"/>';
+
+    /* Draw curved paths from source to each card */
+    var midY = h * 0.55;
+    dstPoints.forEach(function(dst, i) {
+      var idx = i + 1;
       var d = 'M ' + srcX + ' ' + srcY
-            + ' C ' + (srcX + cpOffset) + ' ' + srcY
-            + ', ' + (dstX - cpOffset) + ' ' + dstY
-            + ', ' + dstX + ' ' + dstY;
+            + ' C ' + srcX + ' ' + midY
+            + ', ' + dst.x + ' ' + (midY - 10)
+            + ', ' + dst.x + ' ' + dst.y;
 
-      html += '<path class="flow-line-bg flow-line-bg--' + (i + 1) + '" d="' + d + '"/>';
-      html += '<path class="flow-line flow-line--' + (i + 1) + '" d="' + d + '"/>';
-      html += '<circle class="flow-dot flow-dot--' + (i + 1) + '" cx="' + dstX + '" cy="' + dstY + '" r="3"/>';
+      html += '<path class="fv-line-bg fv-line-bg--' + idx + '" d="' + d + '"/>';
+      html += '<path class="fv-line fv-line--' + idx + '" d="' + d + '"/>';
+      html += '<circle class="fv-dot fv-dot--' + idx + '" cx="' + dst.x + '" cy="' + dst.y + '" r="3"/>';
     });
 
     svg.innerHTML = html;
-    connector.classList.add('flow-connector--visible');
+    connector.classList.add('flow-connector-v--visible');
   }
 
   /* Redraw on resize */
-  var _flowTimer;
+  var _flowVTimer;
   window.addEventListener('resize', function() {
-    clearTimeout(_flowTimer);
-    _prevSrcY = null; _stableCount = 0;
-    _flowTimer = setTimeout(drawFlowConnector, 200);
+    clearTimeout(_flowVTimer);
+    var c = document.getElementById('flowConnectorV');
+    if (c) c.classList.remove('flow-connector-v--visible');
+    _flowVTimer = setTimeout(drawFlowV, 200);
   });
 
   /* Gate: animate once per session */
@@ -1562,7 +1548,7 @@
     var totalDays = 1;
     var trialMap = null;
     var autoTimer = null;
-    var INTERVAL = 1800;
+    var INTERVAL = 360;
 
     /* Use prefetched data */
     _prefetchMeta.then(function(meta) {
@@ -1601,16 +1587,18 @@
 
             container.style.opacity = '1';
 
-            /* Show zoomed-out view for a moment, then zoom in */
-            setTimeout(function() {
-              cam.zoomTo(finalZoom, 3000, 'Cubic.easeOut');
-            }, 1200);
-
-            /* Trigger Stage 2 after zoom-in completes (1.2s pause + 3s zoom) */
+            /* Show cards first, then zoom in */
             setTimeout(function() {
               if (onZoomDone) onZoomDone();
-              advanceDay();
-            }, 4500);
+            }, 800);
+
+            /* Zoom in after cards have appeared */
+            setTimeout(function() {
+              cam.zoomTo(finalZoom, 3000, 'Cubic.easeOut');
+            }, 1800);
+
+            /* Start auto-play after zoom settles */
+            setTimeout(advanceDay, 5000);
           }
         });
       });
@@ -1625,10 +1613,15 @@
         .then(function(data) {
           var patients = data.patients || [];
           if (trialMap) {
-            trialMap.updateDay(currentDay, patients);
+            var animPromise = trialMap.updateDay(currentDay, patients);
             trialMap.updateBubbles(patients);
+            var delayPromise = new Promise(function(r) { setTimeout(r, INTERVAL); });
+            Promise.all([animPromise, delayPromise]).then(function() {
+              autoTimer = setTimeout(advanceDay, 0);
+            });
+          } else {
+            autoTimer = setTimeout(advanceDay, INTERVAL);
           }
-          autoTimer = setTimeout(advanceDay, INTERVAL);
         })
         .catch(function() {
           autoTimer = setTimeout(advanceDay, INTERVAL);

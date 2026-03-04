@@ -215,7 +215,7 @@ ClinicalTrialEngine/
 ├── config/
 │   └── defaults.py                      전역 상수 (grade transition, tumor rate, mortality 등)
 │
-├── frontend/                            Django 웹 UI
+├── web/                            Django 웹 UI
 │   ├── trial_server/                    Django 설정/URL
 │   ├── viewer/views.py                  View 함수 (페이지 + JSON API + Game API)
 │   ├── templates/                       HTML 템플릿

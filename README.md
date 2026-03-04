@@ -480,7 +480,7 @@ CLARA/
 │   ├── siglip_classifier.py       SigLIP vision classifier head
 │   └── cough_classifier.py        Cough audio classifier
 │
-├── frontend/                      Django web interface
+├── web/                      Django web interface
 │   ├── viewer/                    Trial viewer, patient state, CRF tables
 │   └── templates/                 Interactive simulation visualization
 │

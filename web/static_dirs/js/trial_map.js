@@ -783,21 +783,20 @@ class TrialMap {
         ty = home.y * TILE - 16;  // inside house
       }
 
-      // Visibility: hide overflow hospital patients, show everyone else
-      sprite.setVisible(!hidden);
       const label = this.nameLabels[p.patient_id];
       const dot = this.statusDots[p.patient_id];
-      if (label) label.setVisible(!hidden);
-      if (dot) dot.setVisible(!hidden);
-
-      // Opacity: translucent inside any building (hospital or home)
-      sprite.setAlpha(hidden ? 0 : 0.7);
 
       const dx = tx - sprite.x;
       const dy = ty - sprite.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist > 2) {
+        // Keep visible during walk, even if overflow — hide after arrival
+        sprite.setVisible(true);
+        sprite.setAlpha(0.7);
+        if (label) label.setVisible(true);
+        if (dot) dot.setVisible(true);
+
         const path = (currentWpId && targetWpId)
           ? this.findPath(currentWpId, targetWpId) : [];
 
@@ -807,8 +806,25 @@ class TrialMap {
         } else {
           animDur = this._directTween(sprite, p.patient_id, tx, ty, spriteKey, dist, true);
         }
+
+        // Hide overflow patients after animation completes
+        if (hidden) {
+          this._scene.time.delayedCall(animDur, () => {
+            sprite.setVisible(false);
+            sprite.setAlpha(0);
+            if (label) label.setVisible(false);
+            if (dot) dot.setVisible(false);
+          });
+        }
+
         if (animDur > maxAnimDuration) maxAnimDuration = animDur;
         sprite.setData('currentWpId', targetWpId);
+      } else {
+        // Already at destination — apply visibility immediately
+        sprite.setVisible(!hidden);
+        sprite.setAlpha(hidden ? 0 : 0.7);
+        if (label) label.setVisible(!hidden);
+        if (dot) dot.setVisible(!hidden);
       }
 
       if (dot) { dot.setFrame(this._getEmotionFrame(p)); dot.clearTint(); }

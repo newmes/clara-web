@@ -715,6 +715,10 @@
     currentPage = 1;
     resetSort();
     loadDomainData();
+    // Re-init chart views that cache mode-specific data
+    if (currentDomain === 'VS') initVsChart();
+    if (currentDomain === 'LB') initLbChart();
+    if (currentDomain === 'TU' || currentDomain === 'RS') initTursView();
   };
   (function() {
     const dcaToggle = document.querySelector('#dca-toggle input');

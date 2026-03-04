@@ -203,6 +203,44 @@
   min-height: 44px; resize: vertical; line-height: 1.6; overflow: hidden;
 }
 
+/* B6 Lab Data Table */
+.lab-table-wrap {
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  overflow-x: auto; margin-top: 4px;
+}
+.lab-table {
+  width: 100%; border-collapse: collapse; font-size: 0.85em;
+  font-family: 'JetBrains Mono', monospace;
+}
+.lab-table thead th {
+  position: sticky; top: 0; background: var(--bg-elevated);
+  padding: 8px 10px; text-align: left; font-weight: 700;
+  border-bottom: 2px solid var(--border); color: var(--text-secondary);
+  font-size: 0.9em; white-space: nowrap;
+}
+.lab-table thead th.lab-date-col {
+  color: var(--accent-cyan); min-width: 100px; text-align: right;
+}
+.lab-table tbody td {
+  padding: 5px 10px; border-bottom: 1px solid rgba(48,54,61,0.2);
+  white-space: nowrap;
+}
+.lab-table tbody tr:hover td { background: rgba(57,210,192,0.04); }
+.lab-table tbody td:first-child {
+  font-weight: 600; color: var(--text-secondary);
+}
+.lab-table tbody td.lab-val {
+  text-align: right;
+}
+.lab-table .lab-num { }
+.lab-table .lab-unit { color: var(--text-muted); font-size: 0.88em; margin-left: 4px; }
+.lab-table .lab-ref { color: var(--text-muted); font-size: 0.82em; display: block; }
+.lab-date-header {
+  background: var(--bg-elevated); padding: 6px 10px;
+  font-weight: 700; color: var(--accent-cyan); font-size: 0.88em;
+  border-bottom: 1px solid var(--border);
+}
+
 /* Seriousness checkboxes — card style */
 .seriousness-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
@@ -620,12 +658,23 @@
             </div>
           </div>
         </div>
-        <!-- Lab data + Medical history -->
-        <div class="field-group cols-2">
+        <!-- Lab data -->
+        <div class="field-group cols-1">
           <div class="field-row">
-            <div class="field-label"><span class="field-id">B6</span> Relevant Lab Data</div>
-            <div class="field-input"><textarea data-path="section_b.lab_data" rows="3"></textarea></div>
+            <div class="field-label" style="justify-content:space-between;width:100%">
+              <span><span class="field-id">B6</span> Relevant Lab Data</span>
+              <button type="button" class="btn-rpt" style="padding:4px 10px;font-size:0.78em" onclick="toggleLabView()">
+                <span id="labViewToggleLabel">Table View</span>
+              </button>
+            </div>
+            <div class="field-input">
+              <textarea data-path="section_b.lab_data" rows="3" id="labDataRaw"></textarea>
+            </div>
+            <div id="labDataTable" style="display:none"></div>
           </div>
+        </div>
+        <!-- Medical history -->
+        <div class="field-group cols-1">
           <div class="field-row">
             <div class="field-label"><span class="field-id">B7</span> Medical History</div>
             <div class="field-input"><textarea data-path="section_b.medical_history" rows="3"></textarea></div>
@@ -871,6 +920,8 @@
 const RUN_ID = "{{ run_id }}";
 const PATIENT_ID = "{{ patient_id }}";
 const AE_SLUG = "{{ ae_slug }}";
+const MODE = "{{ mode|default:'care_ai' }}";
+const AE_DAY = {{ ae_day|default:"null" }};
 const AI_USED = {{ ai_used|yesno:"true,false" }};
 
 let medwatchData = JSON.parse('{{ medwatch_json|escapejs }}');
@@ -881,6 +932,8 @@ let reportStatus = { status: 'draft' };
 // ═══════ Init ═══════
 document.addEventListener('DOMContentLoaded', () => {
   populateForm();
+  // Default to table view for B6 lab data
+  toggleLabView();
   if (meddraData && meddraData.pt) {
     document.getElementById('statusMeddra').textContent =
       `MedDRA: ${meddraData.pt} (${meddraData.source || 'lookup'})`;
@@ -936,6 +989,113 @@ function populateForm() {
       if (el.tagName === 'TEXTAREA') autoGrow(el);
     }
   });
+}
+
+// ═══════ B6 Lab Data Table ═══════
+let labViewIsTable = false;
+
+function toggleLabView() {
+  labViewIsTable = !labViewIsTable;
+  const raw = document.getElementById('labDataRaw');
+  const table = document.getElementById('labDataTable');
+  const label = document.getElementById('labViewToggleLabel');
+  if (labViewIsTable) {
+    renderLabTable(raw.value);
+    raw.parentElement.style.display = 'none';
+    table.style.display = 'block';
+    label.textContent = 'Text View';
+  } else {
+    raw.parentElement.style.display = '';
+    table.style.display = 'none';
+    label.textContent = 'Table View';
+  }
+}
+
+function parseLabData(text) {
+  /* Parse both formats:
+     New: [2026-01-06]\nHEMOGLOBIN: 14.1 g/dL (ref ...)\n\n[2026-03-27]\n...
+     Legacy: HEMOGLOBIN: 14.1 g/dL [2026-01-06]; WBC: 6.4 x10^9/L [2026-01-06]; ...
+  */
+  const byDate = new Map();
+  const allTests = new Set();
+
+  // Try new format first: blocks separated by blank lines, starting with [date]
+  const blocks = text.split(/\n\n+/);
+  let isNewFormat = false;
+  for (const block of blocks) {
+    const lines = block.trim().split('\n');
+    if (!lines.length) continue;
+    const dateMatch = lines[0].match(/^\[(\d{4}-\d{2}-\d{2})\]$/);
+    if (dateMatch) {
+      isNewFormat = true;
+      const dt = dateMatch[1];
+      if (!byDate.has(dt)) byDate.set(dt, {});
+      for (let i = 1; i < lines.length; i++) {
+        const m = lines[i].match(/^([A-Z_]+):\s*(.+)$/);
+        if (m) {
+          allTests.add(m[1]);
+          byDate.get(dt)[m[1]] = m[2].trim();
+        }
+      }
+    }
+  }
+
+  // Fallback: legacy semicolon-separated format
+  if (!isNewFormat) {
+    const entries = text.split(/;\s*/);
+    for (const entry of entries) {
+      const m = entry.trim().match(/^([A-Z_]+):\s*(.+?)\s*\[(\d{4}-\d{2}-\d{2})\]\s*$/);
+      if (!m) continue;
+      const [, test, val, dt] = m;
+      if (test === 'REQUIREDLABS') continue;
+      allTests.add(test);
+      if (!byDate.has(dt)) byDate.set(dt, {});
+      byDate.get(dt)[test] = val.trim();
+    }
+  }
+
+  return { byDate, allTests: [...allTests] };
+}
+
+function renderLabTable(text) {
+  const container = document.getElementById('labDataTable');
+  if (!text || !text.trim()) {
+    container.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:0.9em">No lab data</div>';
+    return;
+  }
+  const { byDate, allTests } = parseLabData(text);
+  if (!byDate.size) {
+    container.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:0.9em">No lab data</div>';
+    return;
+  }
+
+  const dates = [...byDate.keys()].sort();
+  let html = '<div class="lab-table-wrap"><table class="lab-table"><thead><tr>';
+  html += '<th>Test</th>';
+  for (const dt of dates) html += `<th class="lab-date-col">${dt}</th>`;
+  html += '</tr></thead><tbody>';
+
+  for (const test of allTests) {
+    html += `<tr><td>${test}</td>`;
+    for (const dt of dates) {
+      const raw = byDate.get(dt)?.[test] ?? '';
+      if (!raw) {
+        html += '<td class="lab-val"><span style="color:var(--text-muted)">—</span></td>';
+      } else {
+        // Split "14.1 g/dL (ref 12-16)" into number, unit, ref
+        const m = raw.match(/^([\d.]+)\s*(.+?)(?:\s*\(ref\s+(.+?)\))?$/);
+        if (m) {
+          const ref = m[3] ? `<span class="lab-ref">(${m[3]})</span>` : '';
+          html += `<td class="lab-val"><span class="lab-num">${m[1]}</span><span class="lab-unit">${m[2]}</span>${ref}</td>`;
+        } else {
+          html += `<td class="lab-val">${raw}</td>`;
+        }
+      }
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
 }
 
 function collectForm() {
@@ -1032,6 +1192,8 @@ async function regenerateAI() {
         run_id: RUN_ID,
         patient_id: PATIENT_ID,
         ae_term: AE_SLUG.replace(/_/g, ' '),
+        ae_day: AE_DAY,
+        mode: MODE,
         use_ai: true,
       }),
     });

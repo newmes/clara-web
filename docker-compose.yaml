@@ -9,7 +9,7 @@ services:
       - "${VITAL_PORT:-19001}:9001"
     volumes:
       - ./data:/app/data
-      - ./frontend:/app/frontend
+      - ./web:/app/web
       - ./src:/app/src
       - ./validation:/app/validation
     environment:

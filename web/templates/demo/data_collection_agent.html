@@ -1767,6 +1767,11 @@ function ciHandleEvent(ev) {
       errDiv.textContent = 'Error: ' + ev.message;
       feed.appendChild(errDiv);
       ciAddMiniTl('dot-ae', 'Error: ' + ev.message);
+      if (ev.message && ev.message.toLowerCase().indexOf('api key') !== -1) {
+        var errSpan = document.getElementById('ciApiKeyError');
+        if (errSpan) errSpan.textContent = 'Invalid API key — please check and try again';
+        ciShowKeyError();
+      }
       break;
     }
 

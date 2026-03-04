@@ -175,7 +175,7 @@ def _extract_lab_ranges(run_path: Path, mode: str = "natural") -> dict:
     Used when rule_set.json is missing or has no lab_reference_ranges.
     Reads the first patient's first day with LB data and builds a ranges dict.
     """
-    from frontend.viewer.crf_aggregator import LAB_ABBREVIATIONS, _lab_display_name
+    from web.viewer.crf_aggregator import LAB_ABBREVIATIONS, _lab_display_name
     sim_dir = run_path / "simulations"
     if not sim_dir.exists():
         return {}

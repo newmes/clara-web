@@ -11,6 +11,11 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+try:
+    import orjson as _json_fast
+except ImportError:
+    _json_fast = None  # fallback to stdlib json
+
 
 # ─── In-memory cache for parsed JSONL ─────────────────────────────────
 # Key: (file_path, mtime) → parsed records.  Avoids re-reading 320 MB on
@@ -22,6 +27,9 @@ def _read_jsonl_cached(fpath: Path) -> list[dict]:
 
 @lru_cache(maxsize=256)
 def _read_jsonl_cached_inner(fpath_str: str, _mtime: float) -> list[dict]:
+    if _json_fast is not None:
+        with open(fpath_str, "rb") as fh:
+            return [_json_fast.loads(line) for line in fh if line.strip()]
     records = []
     with open(fpath_str, encoding="utf-8") as fh:
         for line in fh:
