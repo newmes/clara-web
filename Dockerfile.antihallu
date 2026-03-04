@@ -11,9 +11,9 @@ RUN pip install --no-cache-dir \
     scipy \
     tqdm
 
-COPY antihallu/server.py antihallu/medgemma_detector.py /app/
-COPY antihallu/examples.json antihallu/cache.json /app/
-COPY antihallu/calibration/ /app/calibration/
+COPY antihallu_server/server.py antihallu_server/medgemma_detector.py /app/
+COPY antihallu_server/examples.json antihallu_server/cache.json /app/
+COPY antihallu_server/calibration/ /app/calibration/
 
 EXPOSE 8000
 
