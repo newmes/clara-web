@@ -1,0 +1,21 @@
+# Django frontend server dependencies
+# Usage: pip install -r requirements-django.txt
+Django==5.2.11
+django-cors-headers==4.9.0
+openpyxl==3.1.5
+agno>=2.3.0
+openai>=1.0
+pydantic>=2.0
+pydantic-settings>=2.0
+lxml>=5.0
+httpx>=0.25
+pypdf>=4.0
+reportlab>=4.0
+requests>=2.31
+cryptography>=3.1
+fastapi>=0.100
+pandas>=2.1
+numpy>=1.26
+google-genai>=1.0
+scipy>=1.12
+orjson>=3.10

@@ -1,10 +1,7 @@
 FROM pytorch/pytorch:2.5.1-cuda12.1-cudnn9-runtime
 WORKDIR /app
-RUN pip install --no-cache-dir \
-    transformers>=5.0.0 accelerate peft \
-    fastapi uvicorn pydantic numpy python-dotenv \
-    "google-genai>=1.16.0" \
-    tensorflow librosa joblib scikit-learn soundfile
+COPY requirements-dca.txt .
+RUN pip install --no-cache-dir -r requirements-dca.txt
 COPY dca_server/ /app/dca_server/
 EXPOSE 8300
 CMD ["python", "-m", "dca_server.server"]

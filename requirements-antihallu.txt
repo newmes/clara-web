@@ -1,0 +1,9 @@
+# AntiHallu server dependencies (CUDA base image provides PyTorch)
+# Usage: pip install -r requirements-antihallu.txt
+transformers==4.57.1
+accelerate
+fastapi
+uvicorn
+scikit-learn
+scipy
+tqdm

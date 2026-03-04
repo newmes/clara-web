@@ -1,0 +1,16 @@
+# Data Collection Agent server dependencies (CUDA base image provides PyTorch)
+# Usage: pip install -r requirements-dca.txt
+transformers>=5.0.0
+accelerate
+peft
+fastapi
+uvicorn
+pydantic
+numpy
+python-dotenv
+google-genai>=1.16.0
+tensorflow
+librosa
+joblib
+scikit-learn
+soundfile

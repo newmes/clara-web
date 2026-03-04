@@ -2,14 +2,8 @@ FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir \
-    transformers==4.57.1 \
-    accelerate \
-    fastapi \
-    uvicorn \
-    scikit-learn \
-    scipy \
-    tqdm
+COPY requirements-antihallu.txt .
+RUN pip install --no-cache-dir -r requirements-antihallu.txt
 
 COPY antihallu_server/server.py antihallu_server/medgemma_detector.py /app/
 COPY antihallu_server/examples.json antihallu_server/cache.json /app/
