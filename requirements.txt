@@ -1,0 +1,54 @@
+# Clinical Trial Simulation Engine + Notebook dependencies
+# Usage: pip install -r requirements.txt
+
+# --- Core ML ---
+torch>=2.1
+transformers>=4.45
+accelerate>=0.25
+safetensors>=0.4
+
+# --- LLM API ---
+google-genai>=1.0
+openai>=1.0
+
+# --- Data & Schema ---
+pydantic>=2.0
+pydantic-settings>=2.0
+numpy>=1.26
+pandas>=2.1
+jsonschema>=4.20
+
+# --- HTTP ---
+httpx>=0.25
+requests>=2.31
+aiohttp>=3.9
+
+# --- Scientific ---
+scipy>=1.11
+
+# --- Visualization ---
+matplotlib>=3.8
+seaborn>=0.13
+
+# --- Notebook ---
+nest-asyncio>=1.5
+ipython>=8.0
+ipykernel>=6.0
+Pillow>=10.0
+
+# --- HuggingFace ---
+huggingface-hub>=0.20
+
+# --- CLI & logging ---
+typer>=0.9
+rich>=13.0
+python-dotenv>=1.0
+
+# --- TensorFlow (Notebook 2: Cough Detection) ---
+# Uncomment if needed:
+# tensorflow>=2.15
+# tensorflow-hub>=0.16
+# librosa>=0.10
+# soundfile>=0.12
+# joblib>=1.3
+# scikit-learn>=1.3
