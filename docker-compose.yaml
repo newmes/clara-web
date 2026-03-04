@@ -186,7 +186,7 @@ services:
       HF_TOKEN: "${HF_TOKEN}"
       MEDASR_MODEL_PATH: "/hf_cache/hub/models--google--medasr/snapshots/7383e5e461baa820bdf9060652fe51b333bafba5"
     volumes:
-      - ./dca_server:/app/dca_server
+      - ./servers/dca:/app/dca_server
       - /home/samuel/.cache/huggingface:/hf_cache
       - /home/samuel/.cache/huggingface/hub/models--google--medgemma-4b-it:/model_repo:ro
       - /home/samuel/CLARA/data:/data:ro

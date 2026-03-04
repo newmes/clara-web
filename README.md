@@ -392,7 +392,7 @@ CLARA deploys as a multi-service Docker stack with GPU acceleration.
 
 4. **SigLIP classification head** — required by data-collection-agent:
    ```bash
-   mkdir -p dca_server/models
+   mkdir -p servers/dca/models
    # Download from HuggingFace dataset:
    python -c "
    from huggingface_hub import hf_hub_download
@@ -402,7 +402,7 @@ CLARA deploys as a multi-service Docker stack with GPU acceleration.
        repo_type='dataset',
        local_dir='/tmp/cte_data'
    )
-   " && cp /tmp/cte_data/siglip_ft_head/best_model_wf1.pt dca_server/models/siglip_head.pt
+   " && cp /tmp/cte_data/siglip_ft_head/best_model_wf1.pt servers/dca/models/siglip_head.pt
    ```
    Source: [AlphaRaven/clinical-trial-engine-data](https://huggingface.co/datasets/AlphaRaven/clinical-trial-engine-data/blob/main/siglip_ft_head/best_model_wf1.pt)
 
@@ -474,7 +474,7 @@ CLARA/
 │   ├── orchestrator.py         3-Phase simulation orchestrator
 │   └── run_simulation.py       CLI entry point
 │
-├── dca_server/                       DCA Nurse API (FastAPI)
+├── servers/dca/                       DCA Nurse API (FastAPI)
 │   ├── server.py                  Endpoints: classify, cough, transcribe, nurse
 │   ├── nurse_engine.py            Medical conversation engine
 │   ├── siglip_classifier.py       SigLIP vision classifier head

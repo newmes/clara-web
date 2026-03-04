@@ -361,7 +361,7 @@ async def health():
 
 @app.post("/v1/consult", response_model=ConsultResponse)
 async def consult(req: ConsultRequest):
-    _require_api_key(req.api_key)
+    # Gemini key is only needed for TTS; vLLM-based generation works without it
     if not classifier or not nurse:
         raise HTTPException(status_code=503, detail="Models not loaded yet")
     if not req.siglip_vector and not req.image_b64:
@@ -537,7 +537,7 @@ async def transcribe(req: TranscribeRequest):
 
 @app.post("/v1/nurse", response_model=NurseResponse)
 async def nurse_endpoint(req: NurseRequest):
-    _require_api_key(req.api_key)
+    # Gemini key is only needed for TTS; vLLM nurse generation works without it
     if not nurse:
         raise HTTPException(status_code=503, detail="NurseEngine not loaded")
 
@@ -624,7 +624,7 @@ async def nurse_endpoint(req: NurseRequest):
 @app.post("/v1/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
     """Follow-up chat within an existing consult session."""
-    _require_api_key(req.api_key)
+    # Gemini key is only needed for TTS; vLLM-based generation works without it
     if not nurse:
         raise HTTPException(status_code=503, detail="Models not loaded yet")
 

@@ -5,9 +5,9 @@ WORKDIR /app
 COPY docker/requirements-antihallu.txt .
 RUN pip install --no-cache-dir -r requirements-antihallu.txt
 
-COPY antihallu_server/server.py antihallu_server/medgemma_detector.py /app/
-COPY antihallu_server/examples.json antihallu_server/cache.json /app/
-COPY antihallu_server/calibration/ /app/calibration/
+COPY servers/antihallu/server.py servers/antihallu/medgemma_detector.py /app/
+COPY servers/antihallu/examples.json servers/antihallu/cache.json /app/
+COPY servers/antihallu/calibration/ /app/calibration/
 
 EXPOSE 8000
 
