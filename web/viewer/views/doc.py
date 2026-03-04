@@ -114,7 +114,7 @@ def api_doc_generate(request):
             pass
 
     from datetime import date as dt_date
-    from src.doc_agent.service import generate_documents
+    from sim.doc_agent.service import generate_documents
 
     result = generate_documents(
         patient_profile=profile,
@@ -169,7 +169,7 @@ def api_doc_list_saes(request, run_id, patient_id):
     if profile is None:
         return JsonResponse({"error": "Patient not found"}, status=404)
 
-    from src.doc_agent.sim_to_crf_adapter import find_serious_aes
+    from sim.doc_agent.sim_to_crf_adapter import find_serious_aes
 
     saes = find_serious_aes(records)
     result = []
@@ -193,7 +193,7 @@ def api_doc_download(request, run_id, patient_id, filename):
 
     GET /api/doc/download/<run_id>/<patient_id>/<filename>
     """
-    from src.doc_agent.service import DOCS_OUTPUT_DIR
+    from sim.doc_agent.service import DOCS_OUTPUT_DIR
 
     file_path = DOCS_OUTPUT_DIR / run_id / patient_id / filename
 
@@ -226,7 +226,7 @@ def api_doc_list(request, run_id):
 
     GET /api/doc/list/<run_id>/
     """
-    from src.doc_agent.service import DOCS_OUTPUT_DIR
+    from sim.doc_agent.service import DOCS_OUTPUT_DIR
 
     docs_dir = DOCS_OUTPUT_DIR / run_id
     if not docs_dir.exists():
@@ -277,13 +277,13 @@ def api_doc_save(request):
             status=400,
         )
 
-    from src.doc_agent.service import DOCS_OUTPUT_DIR
-    from src.doc_agent.schemas.medwatch import MedWatch3500A
-    from src.doc_agent.medwatch_pdf import generate_medwatch_pdf
-    from src.doc_agent.e2b_converter import convert_to_e2b_xml
-    from src.doc_agent.meddra_coder import code_meddra
-    from src.doc_agent.config import Settings
-    from src.doc_agent.schemas.crf import CRFData
+    from sim.doc_agent.service import DOCS_OUTPUT_DIR
+    from sim.doc_agent.schemas.medwatch import MedWatch3500A
+    from sim.doc_agent.medwatch_pdf import generate_medwatch_pdf
+    from sim.doc_agent.e2b_converter import convert_to_e2b_xml
+    from sim.doc_agent.meddra_coder import code_meddra
+    from sim.doc_agent.config import Settings
+    from sim.doc_agent.schemas.crf import CRFData
 
     try:
         medwatch = MedWatch3500A.model_validate(mw_data)
@@ -328,7 +328,7 @@ def api_doc_save(request):
     from datetime import date as dt_date
     profile, records = _load_patient_data(run_path, patient_id)
     if profile and records:
-        from src.doc_agent.sim_to_crf_adapter import build_crf_for_sae
+        from sim.doc_agent.sim_to_crf_adapter import build_crf_for_sae
         crf = build_crf_for_sae(
             patient_profile=profile,
             day_records=records,
@@ -349,7 +349,7 @@ def api_doc_save(request):
     xml_url = f"/api/doc/download/{run_id}/{patient_id}/{xml_path.name}"
 
     # Update status file with refreshed MedDRA confidence
-    from src.doc_agent.service import DOCS_OUTPUT_DIR as _DOCS_DIR
+    from sim.doc_agent.service import DOCS_OUTPUT_DIR as _DOCS_DIR
     from datetime import datetime
     status_path = _DOCS_DIR / run_id / patient_id / f"report_status_{ae_slug}.json"
     status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -386,7 +386,7 @@ def api_doc_save(request):
 
 def _get_status_path(run_id: str, patient_id: str, ae_slug: str) -> Path:
     """Return path to the report status JSON file."""
-    from src.doc_agent.service import DOCS_OUTPUT_DIR
+    from sim.doc_agent.service import DOCS_OUTPUT_DIR
     return DOCS_OUTPUT_DIR / run_id / patient_id / f"report_status_{ae_slug}.json"
 
 
@@ -492,7 +492,7 @@ def sae_report_editor(request, run_id: str, patient_id: str, ae_slug: str):
     if not run_path.exists():
         return HttpResponse("Run not found", status=404)
 
-    from src.doc_agent.service import DOCS_OUTPUT_DIR
+    from sim.doc_agent.service import DOCS_OUTPUT_DIR
 
     # Check for existing saved medwatch data
     json_path = DOCS_OUTPUT_DIR / run_id / patient_id / f"medwatch_data_{ae_slug}.json"
@@ -531,7 +531,7 @@ def sae_report_editor(request, run_id: str, patient_id: str, ae_slug: str):
         use_ai = request.GET.get("use_ai", "0") == "1"
 
         from datetime import date as dt_date
-        from src.doc_agent.service import generate_documents
+        from sim.doc_agent.service import generate_documents
 
         result = generate_documents(
             patient_profile=profile,
@@ -613,7 +613,7 @@ def doc_hub(request, run_id: str):
         if list(sim_dir.glob("*_natural.jsonl")):
             available_modes.append("natural")
 
-    from src.doc_agent.sim_to_crf_adapter import find_serious_aes
+    from sim.doc_agent.sim_to_crf_adapter import find_serious_aes
 
     all_saes = []
     for pid in patient_ids:
@@ -639,7 +639,7 @@ def doc_hub(request, run_id: str):
                 "report_status": report_status.get("status", "draft"),
             })
 
-    from src.doc_agent.service import DOCS_OUTPUT_DIR
+    from sim.doc_agent.service import DOCS_OUTPUT_DIR
     docs_dir = DOCS_OUTPUT_DIR / run_id
     existing_docs = set()
     if docs_dir.exists():
@@ -1048,7 +1048,7 @@ def _build_sae_chat_context(run_path, body, drug_name, indication, n_patients, m
     patient_id = body.get("patient_id", "")
     ae_slug = body.get("ae_slug", "")
 
-    from src.doc_agent.service import DOCS_OUTPUT_DIR
+    from sim.doc_agent.service import DOCS_OUTPUT_DIR
     json_path = DOCS_OUTPUT_DIR / run_path.name / patient_id / f"medwatch_data_{ae_slug}.json"
 
     if not json_path.exists():
@@ -1124,7 +1124,7 @@ def _build_sae_chat_context(run_path, body, drug_name, indication, n_patients, m
 
 def _build_sae_hub_chat_context(run_path, body, drug_name, indication, n_patients, message):
     """Build context for SAE hub listing page chat -- summarises all SAEs."""
-    from src.doc_agent.sim_to_crf_adapter import find_serious_aes
+    from sim.doc_agent.sim_to_crf_adapter import find_serious_aes
 
     mode = body.get("mode", "natural")
     patient_ids = _list_patients(run_path)

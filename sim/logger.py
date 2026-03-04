@@ -7,7 +7,7 @@ logs/ 디렉토리에 타임스탬프된 로그 파일을 생성한다.
   - File: DEBUG (모든 상세 — hazard 값, LLM 입출력, 이벤트 등)
 
 사용법:
-  from src.logger import get_logger, log_llm_call, log_event
+  from sim.logger import get_logger, log_llm_call, log_event
 
   logger = get_logger(__name__)
   logger.info("Phase 0 시작")

@@ -45,8 +45,8 @@ if not os.environ.get("GOOGLE_API_KEY"):
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.orchestrator import SimulationRunner
-from src.logger import log_summary, get_log_file_path
+from sim.orchestrator import SimulationRunner
+from sim.logger import log_summary, get_log_file_path
 
 
 class _TeeWriter:
@@ -233,7 +233,7 @@ def main():
             print("Phase 3: A/B Comparison — Natural vs Care AI")
             print("=" * 60)
             try:
-                from src.evaluator import run_evaluation
+                from sim.evaluator import run_evaluation
                 comparison = run_evaluation(run_dir)
             except Exception as eval_err:
                 print(f"⚠ Evaluation failed (non-fatal): {eval_err}")

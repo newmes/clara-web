@@ -12,7 +12,7 @@ import time
 import traceback
 
 from google import genai
-from src.logger import log_llm_call, get_logger
+from sim.logger import log_llm_call, get_logger
 
 _logger = get_logger("llm_client")
 

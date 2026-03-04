@@ -122,6 +122,9 @@ _AE_RELEVANT_LABS: dict[str, set[str]] = {
     "hypothyroidism": {"TSH", "FT4", "FT3"},
     "hyperthyroidism": {"TSH", "FT4", "FT3"},
     "pneumonitis": {"LDH", "KL6", "SPO2"},
+    "dyspnoea": {"LDH", "SPO2", "HEMOGLOBIN", "HGB", "CREATININE", "ALBUMIN"},
+    "dyspnea": {"LDH", "SPO2", "HEMOGLOBIN", "HGB", "CREATININE", "ALBUMIN"},
+    "cough": {"LDH", "WBC", "ANC", "CRP", "SPO2"},
     "stomatitis": {"ANC", "WBC", "ALBUMIN"},
     "fatigue": {"HEMOGLOBIN", "HGB", "TSH", "CREATININE", "EGFR", "SODIUM", "ALBUMIN"},
     "diarrhea": {"SODIUM", "POTASSIUM", "CREATININE", "EGFR", "ALBUMIN"},
@@ -320,22 +323,62 @@ def format_b5_prompt(
     settings: Settings,
     sentinel_output: Optional[SentinelOutput] = None,
 ) -> str:
-    """Format the B5 Narrative prompt with all CRF data."""
+    """Format the B5 Narrative prompt with all CRF data.
+
+    Omits empty data sections to save tokens for the 4K-context model.
+    """
+    # Build data sections — only include non-empty ones
+    _NO_DATA_PREFIXES = ("No ", "N/A", "No relevant", "No lab", "No vital",
+                         "No concomitant", "No imaging", "No pulmonary",
+                         "No microbiology", "No specialist", "No ILD")
+
+    def _has_data(text: str) -> bool:
+        return bool(text) and not any(text.startswith(p) for p in _NO_DATA_PREFIXES)
+
+    sections: list[str] = []
+
+    # Always-included sections
+    sections.append(f"## Patient Demographics (DM)\n{_format_dm_data(crf)}")
+    sections.append(f"## Study Drug Exposure (EC)\n{_format_ec_data(crf, drug_name=settings.DRUG_NAME, indication=settings.INDICATION)}")
+    sections.append(f"## Adverse Event (AE)\n{_format_ae_data(crf)}")
+
+    # Conditionally-included sections
+    lb = _format_lb_data(crf, ae_term=crf.ae.AETERM)
+    if _has_data(lb):
+        sections.append(f"## Laboratory Results (LB)\n{lb}")
+    mh = _format_mh_data(crf)
+    if _has_data(mh):
+        sections.append(f"## Medical History (MH)\n{mh}")
+    vs = _format_vs_data(crf)
+    if _has_data(vs):
+        sections.append(f"## Vital Signs (VS)\n{vs}")
+    cm = _format_cm_data(crf)
+    if _has_data(cm):
+        sections.append(f"## Concomitant Medications (CM)\n{cm}")
+    dd = _format_dd_data(crf)
+    if _has_data(dd):
+        sections.append(f"## Death Details (DD)\n{dd}")
+    sentinel = _format_sentinel_output(sentinel_output, crf)
+    if _has_data(sentinel):
+        sections.append(f"## ILD Clinical Findings\n{sentinel}")
+    imaging = _format_imaging_data(crf)
+    if _has_data(imaging):
+        sections.append(f"## Imaging Studies\n{imaging}")
+    pft = _format_pft_data(crf)
+    if _has_data(pft):
+        sections.append(f"## Pulmonary Function Tests (PFT)\n{pft}")
+    micro = _format_microbiology_data(crf)
+    if _has_data(micro):
+        sections.append(f"## Microbiology Results\n{micro}")
+    consult = _format_consultation_data(crf)
+    if _has_data(consult):
+        sections.append(f"## Specialist Consultations\n{consult}")
+
+    data_block = "\n\n".join(sections)
+
     return B5_NARRATIVE_PROMPT.format(
         report_type="Initial",
-        dm_data=_format_dm_data(crf),
-        ec_data=_format_ec_data(crf, drug_name=settings.DRUG_NAME, indication=settings.INDICATION),
-        ae_data=_format_ae_data(crf),
-        lb_data=_format_lb_data(crf, ae_term=crf.ae.AETERM),
-        mh_data=_format_mh_data(crf),
-        vs_data=_format_vs_data(crf),
-        cm_data=_format_cm_data(crf),
-        dd_data=_format_dd_data(crf),
-        sentinel_output=_format_sentinel_output(sentinel_output, crf),
-        imaging_data=_format_imaging_data(crf),
-        pft_data=_format_pft_data(crf),
-        microbiology_data=_format_microbiology_data(crf),
-        consultation_data=_format_consultation_data(crf),
+        data_block=data_block,
     )
 
 

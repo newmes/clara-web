@@ -42,17 +42,26 @@ def _format_therapy_dates(crf: CRFData) -> tuple[Optional[date], Optional[date]]
 
 
 def _format_lab_data(crf: CRFData) -> str:
-    """Summarize lab records into B6 text."""
+    """Summarize lab records into B6 text, grouped by date."""
     if not crf.lb.records:
         return ""
-    lines: list[str] = []
+    from collections import OrderedDict
+    by_date: OrderedDict[str, list[str]] = OrderedDict()
     for r in crf.lb.records:
+        if r.LBTESTCD and r.LBTESTCD.upper() == "REQUIREDLABS":
+            continue
         ref = ""
         if r.LBORNRLO and r.LBORNRHI:
-            ref = f" (ref: {r.LBORNRLO}-{r.LBORNRHI})"
+            ref = f" (ref {r.LBORNRLO}-{r.LBORNRHI})"
         unit = f" {r.LBORRESU}" if r.LBORRESU else ""
-        lines.append(f"{r.LBTESTCD}: {r.LBORRES}{unit}{ref} [{r.LBDAT}]")
-    return "; ".join(lines)
+        date_key = str(r.LBDAT) if r.LBDAT else "Unknown"
+        by_date.setdefault(date_key, []).append(
+            f"{r.LBTESTCD}: {r.LBORRES}{unit}{ref}"
+        )
+    sections: list[str] = []
+    for dt, items in by_date.items():
+        sections.append(f"[{dt}]\n" + "\n".join(items))
+    return "\n\n".join(sections)
 
 
 def classify_cm_records(

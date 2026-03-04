@@ -9,44 +9,7 @@ Write a concise clinical narrative in chronological order based on the following
 - If "Initial": Write the full narrative from onset
 - If "Follow-up": Begin with "This is a follow-up to the initial report dated {{initial_report_date}}. Since the previous report, the following new information has been obtained:" then describe only the new/changed information below.
 
-## Patient Demographics (DM)
-{dm_data}
-
-## Study Drug Exposure (EC)
-{ec_data}
-
-## Adverse Event (AE)
-{ae_data}
-
-## Laboratory Results (LB)
-{lb_data}
-
-## Medical History (MH)
-{mh_data}
-
-## Vital Signs (VS)
-{vs_data}
-
-## Concomitant Medications (CM)
-{cm_data}
-
-## Death Details (DD) — if applicable
-{dd_data}
-
-## ILD Clinical Findings — if applicable
-{sentinel_output}
-
-## Imaging Studies
-{imaging_data}
-
-## Pulmonary Function Tests (PFT)
-{pft_data}
-
-## Microbiology Results
-{microbiology_data}
-
-## Specialist Consultations
-{consultation_data}
+{data_block}
 
 ## Rules
 
@@ -79,9 +42,16 @@ Write a concise clinical narrative in chronological order based on the following
    - Do NOT invent, guess, or substitute generic names — use ONLY what is provided
    - Example: if "Suspect drug: Enfortumab vedotin (Padcev)", write exactly "Enfortumab vedotin (Padcev)"
 
-4. DO NOT:
-   - Make causality judgments (this is for the investigator)
-   - Add information not present in the input data
+4. OUTCOME — YOU MUST USE THE EXACT OUTCOME FROM THE AE DATA:
+   - If Outcome says "NOT RECOVERED/NOT RESOLVED": write "the dyspnoea had not resolved at the time of reporting" or "the adverse event remains ongoing". NEVER write "resolved".
+   - If Outcome says "RECOVERED/RESOLVED": write "the adverse event resolved on [end date]"
+   - If Outcome says "FATAL": write "the subject died on [date]"
+   - Do NOT contradict the stated outcome. This is critical for regulatory accuracy.
+
+5. DO NOT — STRICTLY FORBIDDEN:
+   - FABRICATE clinical findings not in the input data (no "chest X-ray showed...", "blood gas revealed..." unless the data sections above explicitly contain these findings)
+   - Add drug names not listed in Study Drug Exposure (EC). If only one drug is listed, mention ONLY that drug
+   - Make causality judgments (this is for the investigator). Do NOT write "attributed to", "caused by", or "causally related"
    - Use abbreviations without first defining them
    - Include laboratory or vital sign values unrelated to the adverse event
    - Use any markdown formatting (no headers, no bold/italic markers, no bullet points)

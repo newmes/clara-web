@@ -34,7 +34,7 @@ import random
 from pathlib import Path
 from typing import Any
 
-from src.logger import get_logger
+from sim.logger import get_logger
 
 _logger = get_logger("evaluator")
 

@@ -63,7 +63,7 @@ def api_sim_start(request):
         _sys.path.insert(0, str(Path(settings.BASE_DIR).parent))
 
         if user_api_key:
-            from src.agents.llm_client import set_api_key
+            from sim.agents.llm_client import set_api_key
             set_api_key(user_api_key)
         else:
             # Load .env
@@ -75,7 +75,7 @@ def api_sim_start(request):
                         key, val = line.split("=", 1)
                         os.environ.setdefault(key.strip(), val.strip())
 
-        from src.orchestrator import SimulationRunner
+        from sim.orchestrator import SimulationRunner
 
         try:
             runner = SimulationRunner(
@@ -140,7 +140,7 @@ def api_sim_start(request):
             if mode == "both":
                 runner.write_run_meta(n_patients, n_days, mode, 'comparing')
                 try:
-                    from src.evaluator import run_evaluation
+                    from sim.evaluator import run_evaluation
                     run_evaluation(run_dir)
                 except Exception as e:
                     print(f"Comparison failed: {e}")

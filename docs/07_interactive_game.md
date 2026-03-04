@@ -1,6 +1,6 @@
 # 07. Interactive Game Mode — 간호사/의사 교육 시뮬레이션
 
-> **파일:** `src/game_session.py` (~780 lines)
+> **파일:** `sim/game_session.py` (~780 lines)
 > **역할:** Care Agent 자리에 사람을 넣어, 실시간 인터랙티브 환자 시뮬레이션
 > **LLM 호출:** 그때그때 (환자 AI 응답 + 일별 GT 생성)
 > **핵심:** 사람(간호사/의사 역할)이 Hospital Record만 보고 AE를 감지해야 함
@@ -380,7 +380,7 @@ sequenceDiagram
 | 실패 시 | 텍스트 전용 모드로 degradation | 멀티모달 없어도 게임 가능 |
 | 전달 방식 | base64 인코딩 (JSON 내 인라인) | 별도 파일 서빙 불필요 |
 
-### 9.3 `MultimodalGameBridge` (`src/multimodal/game_bridge.py`)
+### 9.3 `MultimodalGameBridge` (`sim/multimodal/game_bridge.py`)
 
 ```python
 class MultimodalGameBridge:
@@ -460,7 +460,7 @@ On camera: slight pallor, fatigue
 ### 9.7 파일 구조
 
 ```
-src/multimodal/
+sim/multimodal/
 ├── game_bridge.py       ← 게임↔멀티모달 브릿지 (NEW)
 ├── config.py            ← GOOGLE_API_KEY fallback 추가
 ├── schemas.py           ← SimPatientProfile, SimAE 어댑터

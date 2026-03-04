@@ -1,6 +1,6 @@
 # 02. Phase 1: Patient Generation (Patient Agent)
 
-> **파일:** `src/agents/patient_agent.py` (455 lines)
+> **파일:** `sim/agents/patient_agent.py` (455 lines)
 > **역할:** rule_set의 확률 분포에서 개별 환자를 생성 (LLM→rand→LLM 패턴)
 > **LLM 호출:** 환자당 3회
 > **난수 사용:** 환자당 독립 Sampler(seed=base+patient_num)

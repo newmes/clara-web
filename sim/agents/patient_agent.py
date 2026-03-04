@@ -13,11 +13,11 @@
 """
 import json
 from pathlib import Path
-from src.agents.llm_client import generate_json, set_caller, DEFAULT_MODEL
-from src.engine.sampler import Sampler
-from src.engine.prob_engine import estimate_probabilities, generate_details
-from src.logger import get_logger
-from config.defaults import DEFAULT_COMORBIDITY_MEDICATIONS
+from sim.agents.llm_client import generate_json, set_caller, DEFAULT_MODEL
+from sim.engine.sampler import Sampler
+from sim.engine.prob_engine import estimate_probabilities, generate_details
+from sim.logger import get_logger
+from sim.config.defaults import DEFAULT_COMORBIDITY_MEDICATIONS
 
 _logger = get_logger('patient_agent')
 

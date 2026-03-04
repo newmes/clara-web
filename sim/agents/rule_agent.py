@@ -24,8 +24,8 @@ Phase 0: drug_name + indication → LLM이 규칙 카테고리를 결정 → 확
 
 import json
 from pathlib import Path
-from src.agents.llm_client import generate_json, set_caller, DEFAULT_MODEL
-from src.logger import get_logger
+from sim.agents.llm_client import generate_json, set_caller, DEFAULT_MODEL
+from sim.logger import get_logger
 
 _logger = get_logger("rule_agent")
 

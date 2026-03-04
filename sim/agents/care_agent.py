@@ -27,14 +27,14 @@ Care AI는 환자와 매일 영상통화를 수행하여:
 import json
 from typing import Any
 
-from src.agents.llm_client import generate_json, set_caller, DEFAULT_MODEL
-from src.engine.mood import (
+from sim.agents.llm_client import generate_json, set_caller, DEFAULT_MODEL
+from sim.engine.mood import (
     MoodState,
     compute_interaction_quality,
     compute_grade_distortion,
 )
-from src.engine.sampler import Sampler
-from src.logger import get_logger
+from sim.engine.sampler import Sampler
+from sim.logger import get_logger
 
 _logger = get_logger("care_agent")
 

@@ -23,14 +23,14 @@ from __future__ import annotations
 import copy
 from typing import Any
 
-from src.engine.mood import (
+from sim.engine.mood import (
     MoodState,
     compute_self_report_probability,
     compute_grade_distortion,
     compute_interaction_quality,
     should_visit_er,
 )
-from src.engine.sampler import Sampler
+from sim.engine.sampler import Sampler
 
 # ══════════════════════════════════════════════════════
 # A. AE 감지 채널 정의

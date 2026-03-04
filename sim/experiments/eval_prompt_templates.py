@@ -25,9 +25,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from dotenv import load_dotenv
 load_dotenv(PROJECT_ROOT / ".env")
 
-from src.agents.llm_client import generate_json as gemini_generate_json, set_caller
-from src.engine.mood import MoodState, compute_interaction_quality, compute_grade_distortion
-from config.defaults import normalize_ae_term
+from sim.agents.llm_client import generate_json as gemini_generate_json, set_caller
+from sim.engine.mood import MoodState, compute_interaction_quality, compute_grade_distortion
+from sim.config.defaults import normalize_ae_term
 
 PATIENT_MODEL = "gemini-2.0-flash"
 MEDGEMMA_BASE = "google/medgemma-4b-it"

@@ -1,6 +1,6 @@
 # 05. Observation Model — GT/HR 분리 + AE 감지
 
-> **파일:** `src/engine/observation.py` (829 lines), `src/engine/mood.py` (556 lines)
+> **파일:** `sim/engine/observation.py` (829 lines), `sim/engine/mood.py` (556 lines)
 > **역할:** Ground Truth를 Hospital Record로 필터링, 환자 심리가 보고 정확도에 미치는 영향 모델링
 > **의학 근거:** Basch et al. (2006) — 환자-의사 AE 등급 일치율 ~50%; Di Maio et al. (2015) — 의사가 57% AE를 과소평가
 >

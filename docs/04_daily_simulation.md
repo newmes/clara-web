@@ -1,6 +1,6 @@
 # 04. Phase 2: Daily Simulation (DailySimulator + Orchestrator)
 
-> **파일:** `src/agents/daily_agent.py` (~3,050 lines), `src/orchestrator.py` (~1,100 lines)
+> **파일:** `sim/agents/daily_agent.py` (~3,050 lines), `sim/orchestrator.py` (~1,100 lines)
 > **역할:** 환자의 일별 상태를 hazard function 기반으로 동적 생성
 > **LLM 호출:** 초기화 1회 + 이벤트 날만 (전체의 ~30-40%)
 >
@@ -446,16 +446,16 @@ def run_parallel(patients, total_days, mode, max_workers=10):
 
 ```bash
 # 기본: 1명, 21일, Natural
-python src/run_simulation.py
+python sim/run_simulation.py
 
 # 10명, 84일, Natural + Care AI 비교
-python src/run_simulation.py --patients 10 --days 84 --mode both --workers 5
+python sim/run_simulation.py --patients 10 --days 84 --mode both --workers 5
 
 # 규칙 재사용 + 시드 고정
-python src/run_simulation.py --patients 5 --days 42 --seed 42 --skip-rules
+python sim/run_simulation.py --patients 5 --days 42 --seed 42 --skip-rules
 
 # 다른 약물
-python src/run_simulation.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5
+python sim/run_simulation.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5
 ```
 
 ### 출력 디렉토리 구조

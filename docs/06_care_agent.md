@@ -1,6 +1,6 @@
 # 06. Care AI Agent — 4-Turn 영상통화 시뮬레이션
 
-> **파일:** `src/agents/care_agent.py` (~920 lines)
+> **파일:** `sim/agents/care_agent.py` (~920 lines)
 > **역할:** 매일 AI 간호사가 환자와 영상통화를 수행하여 AE를 조기 감지
 > **LLM 호출:** 매일 최대 4회 (조기 종료 시 2회)
 > **정보 비대칭:** Patient LLM은 GT 접근, Nurse LLM은 HR만 접근

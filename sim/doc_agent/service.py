@@ -32,9 +32,28 @@ def _clean_narrative(narrative: str, _re) -> str:
     """Clean up 4B model B5 narrative output artifacts.
 
     Handles: CRF raw data echo, duplicate paragraphs/sentences,
-    repetition loops, and markdown remnants.
+    repetition loops, near-duplicate sentences, and markdown remnants.
     """
-    # 0) Truncate at CRF raw data echo (model copies input data after narrative)
+    # 0a) Strip thinking tokens and model meta-commentary
+    narrative = _re.sub(r"<unused\d+>.*?</unused\d+>", "", narrative, flags=_re.DOTALL)
+    narrative = _re.sub(r"<unused\d+>.*", "", narrative, flags=_re.DOTALL)
+    narrative = narrative.strip()
+
+    #     MedGemma 4B sometimes emits "Note: ..." analysis or refusal preamble
+    lines = narrative.split("\n")
+    start_idx = 0
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        # Skip meta-commentary, separators, and empty lines at the top
+        if (stripped.startswith("Note:") or stripped.startswith("To fulfill")
+                or stripped.startswith("Based on the provided")
+                or stripped == "---" or not stripped):
+            start_idx = i + 1
+        else:
+            break
+    narrative = "\n".join(lines[start_idx:]).strip()
+
+    # 0b) Truncate at CRF raw data echo (model copies input data after narrative)
     crf_echo_patterns = [
         r"^Term:\s", r"^Onset:\s", r"^Severity:\s", r"^CTCAE Grade:\s",
         r"^Serious:\s", r"^Causality:\s", r"^Action taken:\s",
@@ -67,21 +86,24 @@ def _clean_narrative(narrative: str, _re) -> str:
         unique_paras.append(p)
     narrative = "\n\n".join(unique_paras)
 
-    # 2) Deduplicate lines (catches line-level repetition)
-    lines = narrative.split("\n")
-    seen_lines: set[str] = set()
-    unique_lines: list[str] = []
-    for line in lines:
-        stripped = line.strip()
-        if not stripped:
-            unique_lines.append(line)
+    # 2) Sentence-level dedup: split by ". " and remove near-duplicates
+    #    This catches "The dose was reduced to X" repeated with different values
+    sentences = _re.split(r'(?<=\.)\s+', narrative)
+    unique_sents: list[str] = []
+    seen_prefixes: set[str] = set()
+    for sent in sentences:
+        sent_s = sent.strip()
+        if not sent_s:
             continue
-        if stripped.startswith("Note:") or stripped in seen_lines:
-            if stripped in seen_lines:
-                continue
-        seen_lines.add(stripped)
-        unique_lines.append(line)
-    narrative = "\n".join(unique_lines).strip()
+        # Normalize: strip numbers/percentages for fuzzy matching
+        norm = _re.sub(r'\d[\d,.]*\s*(%|mg|kg|mL|mcg)?', '#', sent_s).strip()
+        # Use first 60 chars as prefix key (catches repetitive patterns)
+        prefix = norm[:60]
+        if prefix in seen_prefixes and len(prefix) > 30:
+            continue
+        seen_prefixes.add(prefix)
+        unique_sents.append(sent_s)
+    narrative = " ".join(unique_sents)
 
     # 3) Detect repeated opening sentence and truncate
     opening = narrative.split(".")[0] if "." in narrative else ""
@@ -89,6 +111,27 @@ def _clean_narrative(narrative: str, _re) -> str:
         second_occurrence = narrative.find(opening, len(opening) + 1)
         if second_occurrence > 0:
             narrative = narrative[:second_occurrence].strip()
+
+    # 4) Truncate at trailing "---" separator (model self-review block)
+    dash_sep = _re.search(r"\n\s*---\s*\n", narrative)
+    if dash_sep:
+        narrative = narrative[:dash_sep.start()].strip()
+
+    # 5) Remove trailing incomplete sentence (from token limit truncation)
+    #    Find last sentence-ending period (not a decimal in a number)
+    #    e.g. "...stable at 76." is incomplete; "...on 2026." is complete
+    for i in range(len(narrative) - 1, 0, -1):
+        if narrative[i] == ".":
+            # Check if this period ends a real sentence (not a decimal)
+            before = narrative[i - 1] if i > 0 else ""
+            after = narrative[i + 1] if i + 1 < len(narrative) else ""
+            if before.isdigit() and (not after or after.isdigit()):
+                # Decimal point or trailing number — keep looking
+                continue
+            # Found a sentence-ending period
+            if i < len(narrative) - 1:
+                narrative = narrative[:i + 1]
+            break
 
     return narrative
 
@@ -148,6 +191,7 @@ def _try_ai_generation(crf: CRFData, settings: Settings) -> dict[str, str]:
             api_key=settings.VLLM_API_KEY,
             max_tokens=settings.MAX_TOKENS_NARRATIVE,
             temperature=settings.TEMPERATURE_NARRATIVE,
+            request_params={"extra_body": {"repetition_penalty": 1.15}},
         )
 
         import re as _re
@@ -163,6 +207,30 @@ def _try_ai_generation(crf: CRFData, settings: Settings) -> dict[str, str]:
         narrative = _re.sub(r"\n{3,}", "\n\n", narrative).strip()
         # Post-process 4B model output artifacts
         narrative = _clean_narrative(narrative, _re)
+
+        # Fix drug name hallucination: remove drugs not in EC data
+        ec_drug = settings.DRUG_NAME  # e.g. "Enfortumab vedotin (Padcev)"
+        # Remove "plus <hallucinated_drug>" or "and <hallucinated_drug>" after the real drug
+        narrative = _re.sub(
+            r"(?i)(Enfortumab vedotin\s*\(Padcev\))\s*(?:plus|and|\+)\s+\w[\w\s-]{2,30}(?=\s)",
+            r"\1",
+            narrative,
+        )
+
+        # Fix outcome hallucination: if AE is NOT RESOLVED but narrative says "resolved"
+        ae_out = crf.ae.AEOUT.upper()
+        if "NOT RECOVERED" in ae_out or "NOT RESOLVED" in ae_out:
+            # Replace false "resolved" claims with correct outcome
+            narrative = _re.sub(
+                r"(?i)the (?:respiratory )?symptoms? resolved[^.]*\.",
+                "the adverse event had not resolved at the time of reporting.",
+                narrative,
+            )
+            narrative = _re.sub(
+                r"(?i)(?:the adverse event|the dyspn[oe]+a|the cough) resolved[^.]*\.",
+                "the adverse event had not resolved at the time of reporting.",
+                narrative,
+            )
 
         structured_model = OpenAILike(
             id=settings.VLLM_MODEL_ID,

@@ -1,6 +1,6 @@
 # 01. Phase 0: Rule Discovery (Rule Agent)
 
-> **파일:** `src/agents/rule_agent.py` (539 lines)
+> **파일:** `sim/agents/rule_agent.py` (539 lines)
 > **역할:** 약물명 + 적응증을 입력받아, 시뮬레이션에 필요한 모든 확률 규칙을 LLM으로 생성
 > **LLM 호출:** 약물당 3회 (Main + CRF Supplement + Composite Model)
 > **난수 사용:** 없음 (순수 LLM 기반)

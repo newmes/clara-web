@@ -23,16 +23,16 @@ import math
 import re
 from typing import Any
 
-from src.agents.llm_client import generate_json, set_caller, DEFAULT_MODEL
-from src.engine.sampler import Sampler
-from src.engine.prob_engine import estimate_probabilities, generate_details
-from src.engine.hazard import (
+from sim.agents.llm_client import generate_json, set_caller, DEFAULT_MODEL
+from sim.engine.sampler import Sampler
+from sim.engine.prob_engine import estimate_probabilities, generate_details
+from sim.engine.hazard import (
     daily_onset_hazard, daily_resolution_hazard, grade_transition_probs,
     tumor_change_pct, adjust_incidence_by_risk_modifiers,
     compute_daily_mortality, compute_dynamic_ecog, compute_causal_lab_target,
     compute_ae_cascade_multipliers, compute_discontinuation_risk,
 )
-from config.defaults import (
+from sim.config.defaults import (
     OU_THETA_VITALS, OU_THETA_LABS,
     VITALS_NOISE, LABS_NOISE_FRACTION, LABS_NOISE_FRACTION_MAP,
     SLOW_MARKER_LABS, LAB_ROUNDING, VITAL_ROUNDING,
@@ -49,8 +49,8 @@ from config.defaults import (
     PADCEV_DOSE_REDUCTION_LEVELS, FDA_DOSE_MOD_OVERRIDES,
     PERMANENT_DC_RULES, IO_MAX_CYCLES, AE_RECURRENCE_HAZARD_MULT,
 )
-from src.context_manager import compress_history
-from src.logger import get_logger, log_event, log_hazard
+from sim.context_manager import compress_history
+from sim.logger import get_logger, log_event, log_hazard
 
 _logger = get_logger("daily_agent")
 

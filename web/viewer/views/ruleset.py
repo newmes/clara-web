@@ -345,7 +345,7 @@ def api_ruleset_generate(request):
         # 사용자 API 키가 있으면 현재 스레드에만 설정 (다른 요청에 영향 없음)
         _prev_rule_key = os.environ.get("RULE_ENGINE_LLM_API_KEY")
         if user_api_key:
-            from src.agents.llm_client import set_api_key
+            from sim.agents.llm_client import set_api_key
             set_api_key(user_api_key)
             os.environ["RULE_ENGINE_LLM_API_KEY"] = user_api_key
         else:

@@ -201,7 +201,7 @@ def api_demo_saes(request):
             status=404,
         )
 
-    from src.doc_agent.sim_to_crf_adapter import find_serious_aes
+    from sim.doc_agent.sim_to_crf_adapter import find_serious_aes
 
     all_saes = []
     for pid in patient_ids:
@@ -290,7 +290,7 @@ def api_demo_generate(request):
 
     try:
         from datetime import date as dt_date
-        from src.doc_agent.service import generate_documents
+        from sim.doc_agent.service import generate_documents
 
         result = generate_documents(
             patient_profile=profile,
@@ -356,7 +356,7 @@ def api_demo_reports(request):
             status=404,
         )
 
-    from src.doc_agent.service import DOCS_OUTPUT_DIR
+    from sim.doc_agent.service import DOCS_OUTPUT_DIR
 
     docs_dir = DOCS_OUTPUT_DIR / run_id
     if not docs_dir.exists():

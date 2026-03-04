@@ -4,7 +4,7 @@ data_to_generate/json/*.json 스키마 기준으로 필드명을 매핑한다.
 내부 로직은 기존 필드명(ae, SBP 등)을 유지하고, 출력 시점에서 일괄 변환.
 
 사용:
-    from src.crf_mapper import map_day_record, map_patient_record
+    from sim.crf_mapper import map_day_record, map_patient_record
     cdash_record = map_day_record(raw_record, patient_data)
 """
 

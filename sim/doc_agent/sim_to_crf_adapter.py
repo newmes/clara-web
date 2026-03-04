@@ -5,7 +5,7 @@ datetime.date objects and "Y"/"N" strings. This adapter converts simulation
 JSONL + patient profile into a validated CRFData instance for a single SAE.
 
 Usage:
-    from src.doc_agent.sim_to_crf_adapter import build_crf_for_sae
+    from sim.doc_agent.sim_to_crf_adapter import build_crf_for_sae
 
     crf = build_crf_for_sae(
         patient_profile=patient_dict,

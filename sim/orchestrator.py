@@ -16,15 +16,15 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from src.agents import rule_agent, patient_agent
-from src.agents.daily_agent import DailySimulator, create_simulator
-from src.agents.care_agent import CareAgent, apply_interventions
-from src.engine.sampler import Sampler
-from src.engine.mood import MoodState
-from src.engine.observation import ObservationModel, compute_detection_delay_summary
-from src.logger import get_logger, log_event, log_summary, init_logging
-from src.crf_mapper import map_day_record, map_patient_record
-from src.hospital_record_mapper import extract_hospital_record
+from sim.agents import rule_agent, patient_agent
+from sim.agents.daily_agent import DailySimulator, create_simulator
+from sim.agents.care_agent import CareAgent, apply_interventions
+from sim.engine.sampler import Sampler
+from sim.engine.mood import MoodState
+from sim.engine.observation import ObservationModel, compute_detection_delay_summary
+from sim.logger import get_logger, log_event, log_summary, init_logging
+from sim.crf_mapper import map_day_record, map_patient_record
+from sim.hospital_record_mapper import extract_hospital_record
 _print_lock = threading.Lock()
 _logger = get_logger('orchestrator')
 
@@ -251,8 +251,8 @@ class SimulationRunner:
             raise RuntimeError('rule_set이 없습니다. discover_rules() 또는 load_rules()를 먼저 호출하세요.')
         save_dir = self.data_dir / 'patients'
         save_dir.mkdir(parents=True, exist_ok=True)
-        from src.agents.patient_agent import generate_patient
-        from src.engine.sampler import Sampler
+        from sim.agents.patient_agent import generate_patient
+        from sim.engine.sampler import Sampler
 
         generated_count = [0]
 

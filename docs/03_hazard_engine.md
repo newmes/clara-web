@@ -1,6 +1,6 @@
 # 03. Hazard Engine — 확률 수학 모듈
 
-> **파일:** `src/engine/hazard.py` (1,020 lines), `src/engine/sampler.py` (145 lines), `src/engine/prob_engine.py` (202 lines)
+> **파일:** `sim/engine/hazard.py` (1,020 lines), `sim/engine/sampler.py` (145 lines), `sim/engine/prob_engine.py` (202 lines)
 > **역할:** Fate table 없이 매일의 이벤트를 동적으로 결정하는 수학 엔진
 > **LLM 호출:** 없음 (hazard.py, sampler.py는 순수 수학. prob_engine.py는 LLM↔Sampler 브릿지)
 

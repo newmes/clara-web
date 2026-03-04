@@ -287,7 +287,7 @@ Care AI 통화 turn마다 미세 조정
 ClinicalTrialEngine/
 ├── CLAUDE.md                   ← 지금 읽고 있는 파일
 │
-├── src/
+├── sim/                        ← 시뮬레이션 엔진 전체
 │   ├── engine/                 ← ★ 확률 엔진 + 관찰 모델
 │   │   ├── sampler.py          ← 난수 생성기
 │   │   ├── prob_engine.py      ← LLM→rand→LLM 패턴
@@ -302,6 +302,8 @@ ClinicalTrialEngine/
 │   │   ├── daily_agent.py      ← Phase 2: GT 생성 + HR 기반 dose mod
 │   │   └── care_agent.py       ← Care AI: 4-turn 영상통화
 │   │
+│   ├── config/defaults.py      ← 시뮬레이션 상수 (CTCAE, hazard 파라미터)
+│   ├── validation/             ← 시뮬레이션 결과 검증 (vs 실제 시험 데이터)
 │   ├── multimodal/             ← Multimodal AE 감지 (SigLIP + HeAR)
 │   ├── orchestrator.py         ← 3-Phase 시뮬레이션 루프
 │   ├── run_simulation.py       ← CLI 실행
@@ -347,19 +349,19 @@ ClinicalTrialEngine/
 
 ```bash
 # 기본: Padcev+Pembro, 환자 1명, 21일
-python src/run_simulation.py
+python sim/run_simulation.py
 
 # A/B 비교 (Natural + Care AI 동시 실행, 같은 환자)
-python src/run_simulation.py --patients 10 --days 84 --seed 42 --mode both --skip-rules
+python sim/run_simulation.py --patients 10 --days 84 --seed 42 --mode both --skip-rules
 
 # Natural만
-python src/run_simulation.py --patients 10 --days 84 --seed 42 --mode natural --skip-rules
+python sim/run_simulation.py --patients 10 --days 84 --seed 42 --mode natural --skip-rules
 
 # Care AI만
-python src/run_simulation.py --patients 10 --days 84 --seed 42 --mode care_ai --skip-rules
+python sim/run_simulation.py --patients 10 --days 84 --seed 42 --mode care_ai --skip-rules
 
 # 다른 약물 (drug-agnostic)
-python src/run_simulation.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5
+python sim/run_simulation.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5
 ```
 
 ---

@@ -13,8 +13,8 @@
 import json
 from typing import Any
 
-from src.agents.llm_client import generate_json, DEFAULT_MODEL
-from src.engine.sampler import Sampler
+from sim.agents.llm_client import generate_json, DEFAULT_MODEL
+from sim.engine.sampler import Sampler
 
 
 # ── 확률 추정 (LLM 호출 1: 확률을 뱉어라) ─────────────

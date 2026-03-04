@@ -8,9 +8,9 @@
 
 ## Overview
 
-`src/doc_agent/` has been integrated into the ClinicalTrialEngine system. The original functionality (MedWatch 3500A PDF + E2B(R3) XML generation from CRF data) is fully preserved. Changes were made only to adapt the package to work within our project structure.
+`sim/doc_agent/` has been integrated into the ClinicalTrialEngine system. The original functionality (MedWatch 3500A PDF + E2B(R3) XML generation from CRF data) is fully preserved. Changes were made only to adapt the package to work within our project structure.
 
-**Our code (`src/crf_mapper.py`, `src/orchestrator.py`, etc.) was NOT modified.** All changes are in `src/doc_agent/` files and new integration files.
+**Our code (`sim/crf_mapper.py`, `sim/orchestrator.py`, etc.) was NOT modified.** All changes are in `sim/doc_agent/` files and new integration files.
 
 ---
 
@@ -35,9 +35,9 @@ All `from app.*` imports were changed to relative imports within the `src.doc_ag
 
 ## 2. `__init__.py` Files Added
 
-Created to make `src/doc_agent/` a proper Python package:
-- `src/doc_agent/__init__.py`
-- `src/doc_agent/schemas/__init__.py`
+Created to make `sim/doc_agent/` a proper Python package:
+- `sim/doc_agent/__init__.py`
+- `sim/doc_agent/schemas/__init__.py`
 
 ---
 
@@ -84,13 +84,13 @@ vLLM settings (VLLM_BASE_URL, VLLM_MODEL_ID) are unchanged — MedGemma via vLLM
 This pointed outside the project (assumed the original AlphaRaven directory structure).
 
 **After**: `Path(__file__).resolve().parent / "data" / "meddra_lookup.json"`  
-Now correctly resolves to `src/doc_agent/data/meddra_lookup.json`.
+Now correctly resolves to `sim/doc_agent/data/meddra_lookup.json`.
 
 ---
 
 ## 5. New Files Added
 
-### `src/doc_agent/sim_to_crf_adapter.py`
+### `sim/doc_agent/sim_to_crf_adapter.py`
 
 Bridge between our simulation output and the doc_agent's `CRFData` Pydantic model.
 
@@ -120,7 +120,7 @@ crf = build_crf_for_sae(
 )
 ```
 
-### `src/doc_agent/service.py`
+### `sim/doc_agent/service.py`
 
 High-level service API wrapping the full pipeline:
 

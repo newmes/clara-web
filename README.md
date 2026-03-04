@@ -356,13 +356,13 @@ jupyter lab notebooks/
 
 ```bash
 # Default: Padcev + Pembrolizumab, 1 patient, 21 days
-python src/run_simulation.py
+python sim/run_simulation.py
 
 # A/B comparison: 50 patients, 84 days (4 cycles)
-python src/run_simulation.py --patients 50 --days 84 --seed 42 --mode both
+python sim/run_simulation.py --patients 50 --days 84 --seed 42 --mode both
 
 # Drug-agnostic: any drug works
-python src/run_simulation.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5
+python sim/run_simulation.py --drug "Ozempic" --indication "type 2 diabetes" --patients 5
 ```
 
 ---

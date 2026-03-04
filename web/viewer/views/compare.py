@@ -59,7 +59,7 @@ def compare_dashboard(request, run_id: str):
                     needs_regen = True
 
         if needs_regen:
-            from src.evaluator import run_evaluation
+            from sim.evaluator import run_evaluation
             run_evaluation(run_path)
 
         with open(report_path) as f:
@@ -107,7 +107,7 @@ def api_compare_data(request, run_id: str):
 
     try:
         if not report_path.exists():
-            from src.evaluator import run_evaluation
+            from sim.evaluator import run_evaluation
             run_evaluation(run_path)
 
         with open(report_path) as f:
@@ -121,7 +121,7 @@ def api_compare_data(request, run_id: str):
 @require_GET
 def api_compare_regenerate(request, run_id: str):
     """Force-regenerate comparison report."""
-    from src.evaluator import run_evaluation
+    from sim.evaluator import run_evaluation
     run_path = _get_run_path(run_id)
     sim_dir = run_path / "simulations"
 

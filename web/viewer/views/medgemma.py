@@ -267,7 +267,7 @@ def api_multimodal_enhance(request):
     # Get or create bridge (cached per patient within run)
     bridge_key = f"{run_id}:{patient_id}"
     try:
-        from src.multimodal.game_bridge import MultimodalGameBridge
+        from sim.multimodal.game_bridge import MultimodalGameBridge
 
         if bridge_key not in _mm_bridges:
             _mm_bridges[bridge_key] = MultimodalGameBridge(patient_json, enabled=True)
