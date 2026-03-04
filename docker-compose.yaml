@@ -10,8 +10,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./web:/app/web
-      - ./src:/app/src
-      - ./validation:/app/validation
+      - ./sim:/app/sim
     environment:
       CTE_VLLM_BASE_URL: "http://clara-medgemma4b-antihallu:8000/v1"
       CTE_VLLM_MODEL_ID: "medgemma-4b-antihallu"
