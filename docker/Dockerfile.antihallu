@@ -2,7 +2,7 @@ FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
 
 WORKDIR /app
 
-COPY requirements-antihallu.txt .
+COPY docker/requirements-antihallu.txt .
 RUN pip install --no-cache-dir -r requirements-antihallu.txt
 
 COPY antihallu_server/server.py antihallu_server/medgemma_detector.py /app/
