@@ -84,6 +84,9 @@ def api_sim_start(request):
                 data_dir=str(run_dir),
                 seed=seed,
             )
+            # API 키를 runner에 저장 → 워커 스레드에 전파용
+            if user_api_key:
+                runner._api_key = user_api_key
             _live_sims[run_name]["runner"] = runner
 
             # Phase 0: Rules
@@ -108,7 +111,7 @@ def api_sim_start(request):
                         base_rule_path = _preset_map[rule_set_preset]
                     elif rule_set_preset.startswith("gt_"):
                         gt_folder = rule_set_preset[3:]
-                        _RULESET_DIR = Path(settings.BASE_DIR).parent / "src" / "ruleset_generation"
+                        _RULESET_DIR = Path(settings.BASE_DIR).parent / "sim" / "ruleset_generation"
                         gt_path = _RULESET_DIR / "ground_truth" / gt_folder / "base.json"
                         if gt_path.exists():
                             base_rule_path = gt_path

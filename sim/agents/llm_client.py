@@ -39,7 +39,13 @@ def set_api_key(api_key: str):
     각 스레드(시뮬레이션, 룰셋 생성 등)가 독립적인 클라이언트를 사용하므로
     다른 스레드의 키를 덮어쓰지 않는다.
     """
+    _thread_local.api_key = api_key
     _thread_local.client = genai.Client(api_key=api_key)
+
+
+def get_api_key() -> str | None:
+    """현재 스레드에 설정된 API 키를 반환한다. 없으면 None."""
+    return getattr(_thread_local, "api_key", None)
 
 
 def _get_client() -> genai.Client:

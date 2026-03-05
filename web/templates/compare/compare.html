@@ -218,7 +218,7 @@
     border: 1px solid rgba(48,54,61,0.4);
     border-radius: 6px; padding: 20px;
   }
-  .impact-chart-wrap canvas { width: 100% !important; max-height: 220px; }
+  .impact-chart-wrap canvas { width: 100% !important; }
 
   /* ══════════════════════════════════════
      5. STATISTICAL EVIDENCE CARDS
@@ -670,13 +670,38 @@ function pidList() {
   return R.natural_patients.map(function(p) { return p.patient_id; });
 }
 
-// Gradient factory for chart bars
-function createGradient(ctx, colorStart, colorEnd) {
-  var g = ctx.createLinearGradient(0, 0, 0, 300);
+// Gradient factory for chart bars — uses chartArea for correct coordinates
+function createGradient(ctx, colorStart, colorEnd, horizontal) {
+  var g = ctx.createLinearGradient(0, 0, horizontal ? 300 : 0, horizontal ? 0 : 300);
   g.addColorStop(0, colorStart);
   g.addColorStop(1, colorEnd);
   return g;
 }
+
+// Plugin: rebuild gradients on resize using actual chartArea dimensions
+var gradientPlugin = {
+  id: 'dynamicGradient',
+  beforeDraw: function(chart) {
+    var meta = chart._gradientMeta;
+    if (!meta) return;
+    var area = chart.chartArea;
+    if (!area) return;
+    var ctx = chart.ctx;
+    meta.forEach(function(entry) {
+      var g = entry.horizontal
+        ? ctx.createLinearGradient(area.left, 0, area.right, 0)
+        : ctx.createLinearGradient(0, area.top, 0, area.bottom);
+      g.addColorStop(0, entry.colorStart);
+      g.addColorStop(1, entry.colorEnd);
+      if (entry.isArray) {
+        chart.data.datasets[entry.dsIndex].backgroundColor[entry.colorIndex] = g;
+      } else {
+        chart.data.datasets[entry.dsIndex].backgroundColor = g;
+      }
+    });
+  }
+};
+Chart.register(gradientPlugin);
 
 function renderDelayChart() {
   var pids = pidList();
@@ -697,7 +722,7 @@ function renderDelayChart() {
 
   var canvas = document.getElementById('chartDelay');
   var ctx = canvas.getContext('2d');
-  new Chart(canvas, {
+  var ch = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: pids,
@@ -730,6 +755,7 @@ function renderDelayChart() {
       }
     }
   });
+  ch._gradientMeta = [{ dsIndex: 1, isArray: false, colorStart: 'rgba(57,210,192,0.7)', colorEnd: 'rgba(88,166,255,0.4)', horizontal: false }];
 }
 
 function renderG3Chart() {
@@ -743,7 +769,7 @@ function renderG3Chart() {
 
   var canvas = document.getElementById('chartG3');
   var ctx = canvas.getContext('2d');
-  new Chart(canvas, {
+  var ch = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: pids,
@@ -776,6 +802,7 @@ function renderG3Chart() {
       }
     }
   });
+  ch._gradientMeta = [{ dsIndex: 1, isArray: false, colorStart: 'rgba(210,153,34,0.6)', colorEnd: 'rgba(254,202,87,0.3)', horizontal: false }];
 }
 
 function renderEcogChart() {
@@ -795,7 +822,7 @@ function renderEcogChart() {
 
   var canvas = document.getElementById('chartEcog');
   var ctx = canvas.getContext('2d');
-  new Chart(canvas, {
+  var ch = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: pids,
@@ -828,6 +855,7 @@ function renderEcogChart() {
       }
     }
   });
+  ch._gradientMeta = [{ dsIndex: 1, isArray: false, colorStart: 'rgba(57,210,192,0.7)', colorEnd: 'rgba(88,166,255,0.4)', horizontal: false }];
 }
 
 // ═══════════════════════════════════════
@@ -841,32 +869,38 @@ function renderActionsChart() {
   var data = Object.values(types);
 
   var canvas = document.getElementById('chartActions');
+  var wrap = canvas.parentElement;
+  wrap.style.height = Math.max(180, labels.length * 48 + 40) + 'px';
   var ctx = canvas.getContext('2d');
 
-  var barColors = [
-    createGradient(ctx, 'rgba(57,210,192,0.8)', 'rgba(57,210,192,0.4)'),
-    createGradient(ctx, 'rgba(88,166,255,0.8)', 'rgba(88,166,255,0.4)'),
-    createGradient(ctx, 'rgba(210,153,34,0.8)', 'rgba(210,153,34,0.4)'),
-    createGradient(ctx, 'rgba(188,140,255,0.8)', 'rgba(188,140,255,0.4)'),
-    createGradient(ctx, 'rgba(247,120,186,0.8)', 'rgba(247,120,186,0.4)')
+  var barColorDefs = [
+    ['rgba(57,210,192,0.8)', 'rgba(57,210,192,0.4)'],
+    ['rgba(88,166,255,0.8)', 'rgba(88,166,255,0.4)'],
+    ['rgba(210,153,34,0.8)', 'rgba(210,153,34,0.4)'],
+    ['rgba(188,140,255,0.8)', 'rgba(188,140,255,0.4)'],
+    ['rgba(247,120,186,0.8)', 'rgba(247,120,186,0.4)']
   ];
+  var barColors = barColorDefs.slice(0, labels.length).map(function(c) {
+    return createGradient(ctx, c[0], c[1], true);
+  });
 
-  new Chart(canvas, {
+  var actionsChart = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: labels,
       datasets: [{
         label: 'Interventions',
         data: data,
-        backgroundColor: barColors.slice(0, labels.length),
+        backgroundColor: barColors,
         borderRadius: 6,
         borderSkipped: false,
-        barThickness: 32
+        maxBarThickness: 32
       }]
     },
     options: {
       indexAxis: 'y',
       responsive: true,
+      maintainAspectRatio: false,
       onClick: function(evt, elements, chart) {
         if (typeof chatbot === 'undefined') return;
         var pairs = chart.data.labels.map(function(lbl, i) {
@@ -887,6 +921,11 @@ function renderActionsChart() {
         y: { grid: { display: false } }
       }
     }
+  });
+
+  // Register gradient meta so plugin rebuilds on resize
+  actionsChart._gradientMeta = barColorDefs.slice(0, labels.length).map(function(c, i) {
+    return { dsIndex: 0, isArray: true, colorIndex: i, colorStart: c[0], colorEnd: c[1], horizontal: true };
   });
 }
 

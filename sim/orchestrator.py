@@ -259,6 +259,10 @@ class SimulationRunner:
         def _gen_one(i):
             if self._cancelled:
                 return None
+            # 부모 스레드의 API 키를 워커 스레드에 전파
+            from sim.agents.llm_client import get_api_key, set_api_key as _set_key
+            if not get_api_key() and hasattr(self, '_api_key') and self._api_key:
+                _set_key(self._api_key)
             patient_seed = (self.seed or 0) + i
             sampler = Sampler(seed=patient_seed)
             patient = generate_patient(self.rule_set, i, n, sampler, self.model)
@@ -692,6 +696,10 @@ class SimulationRunner:
         Returns:
             {pid, results, llm_calls, quiet_days, summary_lines, error}
         '''
+        # 부모 스레드의 API 키를 워커 스레드에 전파
+        from sim.agents.llm_client import get_api_key, set_api_key as _set_key
+        if not get_api_key() and hasattr(self, '_api_key') and self._api_key:
+            _set_key(self._api_key)
         pid = patient['patient_id']
         lines = []
         try:
