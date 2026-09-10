@@ -1,4 +1,4 @@
-> ⚠️ **Archived 2026-09-10** — 발표 템플릿 보존용(마지막 push 2026-06)
+> ⚠️ **Archived 2026-09-10** — 프로젝트 종료(웹). 앱 레포: CLARA_Call
 
 <div align="center">
 
