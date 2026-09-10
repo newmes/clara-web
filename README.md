@@ -1,3 +1,5 @@
+> ⚠️ **Archived 2026-09-10** — 발표 템플릿 보존용(마지막 push 2026-06)
+
 <div align="center">
 
 <img src="docs/assets/logo.svg" width="100" alt="CLARA Logo" />
