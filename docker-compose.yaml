@@ -144,7 +144,7 @@ services:
       DAPO_SYSTEM_PROMPT: "You are a helpful medical AI assistant. If you are not sure about something, say so. Do not make up information. Always recommend consulting a healthcare professional."
     volumes:
       - /home/samuel/.cache/huggingface:/hf_cache:ro
-      - /home/samuel/.cache/huggingface/hub/models--AlphaRaven--medgemma-4b-antihallu:/model_dapo_cache:ro
+      - /home/samuel/.cache/huggingface/hub/models--newmes--medgemma-4b-antihallu:/model_dapo_cache:ro
     shm_size: "4g"
     deploy:
       resources:
