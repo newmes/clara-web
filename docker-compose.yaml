@@ -84,7 +84,7 @@ services:
       HF_HUB_OFFLINE: "1"
       TRANSFORMERS_OFFLINE: "1"
     volumes:
-      - /home/samuel/.cache/huggingface/hub/models--AlphaRaven--medgemma-4b-antihallu:/model_cache:ro
+      - /home/samuel/.cache/huggingface/hub/models--newmes--medgemma-4b-antihallu:/model_cache:ro
       - /home/samuel/.cache/huggingface/hub/models--google--medgemma-1.5-4b-it/blobs/1299c11d7cf632ef3b4e11937501358ada021bbdf7c47638d13c0ee982f2e79c:/model_cache/snapshots/66102b70ed9074a1dddf19d1bca6f8942cb2a9c6/tokenizer.model:ro
       - /home/samuel/.cache/huggingface/hub/models--google--medgemma-1.5-4b-it/blobs/7d4046bf0505a327dd5a0abbb427ecd4fc82f99c2ceaa170bc61ecde12809b0c:/model_cache/snapshots/66102b70ed9074a1dddf19d1bca6f8942cb2a9c6/tokenizer.json:ro
       - /home/samuel/.cache/huggingface/hub/models--google--medgemma-4b-it/blobs/72c9f6bc082907666631052305438b5e7db2a8e2:/model_cache/snapshots/66102b70ed9074a1dddf19d1bca6f8942cb2a9c6/tokenizer_config.json:ro
@@ -141,7 +141,7 @@ services:
       DAPO_SYSTEM_PROMPT: "You are a helpful medical AI assistant. If you are not sure about something, say so. Do not make up information. Always recommend consulting a healthcare professional."
     volumes:
       - /home/samuel/.cache/huggingface:/hf_cache:ro
-      - /home/samuel/.cache/huggingface/hub/models--AlphaRaven--medgemma-4b-antihallu:/model_dapo_cache:ro
+      - /home/samuel/.cache/huggingface/hub/models--newmes--medgemma-4b-antihallu:/model_dapo_cache:ro
     shm_size: "4g"
     deploy:
       resources:

@@ -118,10 +118,10 @@ Each HAI-DEF model serves a distinct clinical role within CLARA:
 
 | Model | Base Model | Role in CLARA | Details |
 |-------|-----------|--------------|---------|
-| [**MedGemma 1.5 4B + RLFR**](https://huggingface.co/AlphaRaven/medgemma-4b-antihallu) | MedGemma 1.5 4B | DAA — whenever a SAE occurs, autonomously generates reports in FDA MedWatch and E2B XML format | MMLU Medical Acc 60.7% → 64.3%<br>Hallucination rate 37.3% → 6.7% |
-| [**MedGemma AE Detection**](https://huggingface.co/AlphaRaven/medgemma-ae-detection) | MedGemma 1.5 4B Anti-Hallucination | DCA — compares baseline and current patient photographs captured during CLARA Call to detect and grade new adverse events using CTCAE criteria | Acc 23.8% → 90.5% |
-| [**HeAR Classifier Head**](https://huggingface.co/datasets/AlphaRaven/clinical-trial-engine-data/tree/main/hear_cough_only_model) | HeAR | DCA — classifies cough segments from CLARA Call audio, distinguishing dry from wet cough via 2-stage pipeline | Fine-tuned on 956 randomly sampled recordings (478 dry / 478 wet) from the [COUGHVID dataset](https://www.kaggle.com/datasets/nasrulhakim86/coughvid-wav), tested on Gemini-generated synthetic audio |
-| [**MedSigLIP Classifier Head**](https://huggingface.co/datasets/AlphaRaven/clinical-trial-engine-data/blob/main/siglip_ft_head/best_model_wf1.pt) | MedSigLIP | DCA — processes video frames captured during CLARA Call to detect visible AE symptoms (e.g., rash, swelling) and classify their CTCAE grade | MLP classifier head on frozen encoder; Trained on 210 Gemini-generated synthetic patient images (147/21/42 split)<br>Acc 26.2% → Acc 61.9% |
+| [**MedGemma 1.5 4B + RLFR**](https://huggingface.co/newmes/medgemma-4b-antihallu) | MedGemma 1.5 4B | DAA — whenever a SAE occurs, autonomously generates reports in FDA MedWatch and E2B XML format | MMLU Medical Acc 60.7% → 64.3%<br>Hallucination rate 37.3% → 6.7% |
+| [**MedGemma AE Detection**](https://huggingface.co/newmes/medgemma-ae-detection) | MedGemma 1.5 4B Anti-Hallucination | DCA — compares baseline and current patient photographs captured during CLARA Call to detect and grade new adverse events using CTCAE criteria | Acc 23.8% → 90.5% |
+| [**HeAR Classifier Head**](https://huggingface.co/datasets/newmes/clinical-trial-engine-data/tree/main/hear_cough_only_model) | HeAR | DCA — classifies cough segments from CLARA Call audio, distinguishing dry from wet cough via 2-stage pipeline | Fine-tuned on 956 randomly sampled recordings (478 dry / 478 wet) from the [COUGHVID dataset](https://www.kaggle.com/datasets/nasrulhakim86/coughvid-wav), tested on Gemini-generated synthetic audio |
+| [**MedSigLIP Classifier Head**](https://huggingface.co/datasets/newmes/clinical-trial-engine-data/blob/main/siglip_ft_head/best_model_wf1.pt) | MedSigLIP | DCA — processes video frames captured during CLARA Call to detect visible AE symptoms (e.g., rash, swelling) and classify their CTCAE grade | MLP classifier head on frozen encoder; Trained on 210 Gemini-generated synthetic patient images (147/21/42 split)<br>Acc 26.2% → Acc 61.9% |
 
 ---
 
@@ -140,8 +140,8 @@ CLARA ships with **5 Jupyter notebooks** demonstrating each component:
 Notebooks use `notebooks/src/` as a local module providing shared source code — simulation engine, LLM agents, multimodal pipelines, ruleset generation, and the document agent.
 
 All models and data **download automatically** from HuggingFace on first run:
-- Models: [AlphaRaven/medgemma-ae-detection](https://huggingface.co/AlphaRaven/medgemma-ae-detection), [AlphaRaven/medgemma-4b-antihallu](https://huggingface.co/AlphaRaven/medgemma-4b-antihallu)
-- Data: [AlphaRaven/clinical-trial-engine-data](https://huggingface.co/datasets/AlphaRaven/clinical-trial-engine-data)
+- Models: [newmes/medgemma-ae-detection](https://huggingface.co/newmes/medgemma-ae-detection), [newmes/medgemma-4b-antihallu](https://huggingface.co/newmes/medgemma-4b-antihallu)
+- Data: [newmes/clinical-trial-engine-data](https://huggingface.co/datasets/newmes/clinical-trial-engine-data)
 
 ---
 
@@ -427,7 +427,7 @@ CLARA deploys as a multi-service Docker stack with GPU acceleration.
 3. **Model weights** — the following must be available locally:
    - `google/medgemma-1.5-4b-it` (HF cache)
    - `google/medgemma-4b-it` (HF cache)
-   - `AlphaRaven/medgemma-4b-antihallu` (HF cache)
+   - `newmes/medgemma-4b-antihallu` (HF cache)
    - `google/medasr` — **gated repo**, requires [access request](https://huggingface.co/google/medasr). Without it, the data-collection-agent starts but audio transcription (MedASR) is unavailable.
 
 4. **SigLIP classification head** — required by data-collection-agent:
@@ -437,14 +437,14 @@ CLARA deploys as a multi-service Docker stack with GPU acceleration.
    python -c "
    from huggingface_hub import hf_hub_download
    hf_hub_download(
-       repo_id='AlphaRaven/clinical-trial-engine-data',
+       repo_id='newmes/clinical-trial-engine-data',
        filename='siglip_ft_head/best_model_wf1.pt',
        repo_type='dataset',
        local_dir='/tmp/cte_data'
    )
    " && cp /tmp/cte_data/siglip_ft_head/best_model_wf1.pt dca_server/models/siglip_head.pt
    ```
-   Source: [AlphaRaven/clinical-trial-engine-data](https://huggingface.co/datasets/AlphaRaven/clinical-trial-engine-data/blob/main/siglip_ft_head/best_model_wf1.pt)
+   Source: [newmes/clinical-trial-engine-data](https://huggingface.co/datasets/newmes/clinical-trial-engine-data/blob/main/siglip_ft_head/best_model_wf1.pt)
 
 ### Volume Path Configuration
 
