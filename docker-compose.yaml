@@ -186,8 +186,8 @@ services:
       MEDASR_MODEL_PATH: "/hf_cache/hub/models--google--medasr/snapshots/7383e5e461baa820bdf9060652fe51b333bafba5"
     volumes:
       - ./servers/dca:/app/dca_server
-      - /home/samuel/.cache/huggingface:/hf_cache
-      - /home/samuel/.cache/huggingface/hub/models--google--medgemma-4b-it:/model_repo:ro
+      - /data2/huggingface:/hf_cache
+      - /data2/huggingface/hub/models--google--medgemma-4b-it:/model_repo:ro
       - /home/samuel/CLARA/data:/data:ro
     shm_size: "4g"
     deploy:
@@ -195,7 +195,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["${GPU_CARE_AI:-1}"]
+              device_ids: ["${GPU_CARE_AI:-2}"]
               capabilities: [gpu]
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8300/v1/health')\" || exit 1"]

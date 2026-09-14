@@ -17,7 +17,7 @@ from ._helpers import logger
 
 
 # ─── Rule Set Generation: GT vs Predicted Comparison ────────
-_RULESET_DIR = Path(settings.BASE_DIR).parent / "src" / "ruleset_generation"
+_RULESET_DIR = Path(settings.BASE_DIR).parent / "sim" / "ruleset_generation"
 
 _GT_TO_OUTPUT = {
     "1_Darbepoetin_alfa": "darbepoetin_alfa_small_cell_lung_cancer",
@@ -339,7 +339,7 @@ def api_ruleset_generate(request):
 
     def _run():
         import sys as _sys
-        _sys.path.insert(0, str(Path(settings.BASE_DIR).parent / "src" / "ruleset_generation"))
+        _sys.path.insert(0, str(Path(settings.BASE_DIR).parent / "sim" / "ruleset_generation"))
         _sys.path.insert(0, str(Path(settings.BASE_DIR).parent))
 
         # 사용자 API 키가 있으면 현재 스레드에만 설정 (다른 요청에 영향 없음)
